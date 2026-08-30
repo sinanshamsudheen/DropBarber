@@ -28,7 +28,7 @@ export function DateStrip({
               className={cn(
                 "flex min-h-[72px] w-[72px] shrink-0 flex-col items-center justify-center rounded-md border text-sm transition-colors",
                 selected
-                  ? "border-ink bg-ink text-white"
+                  ? "border-ink bg-ink text-on-ink"
                   : "border-hairline bg-card text-ink hover:border-ink",
               )}
             >

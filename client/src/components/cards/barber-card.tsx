@@ -59,7 +59,7 @@ export function BarberCard({
         <span
           className={cn(
             "grid size-6 shrink-0 place-items-center rounded-full border",
-            selected ? "border-ink bg-ink text-white" : "border-border-strong",
+            selected ? "border-ink bg-ink text-on-ink" : "border-border-strong",
           )}
           aria-hidden
         >

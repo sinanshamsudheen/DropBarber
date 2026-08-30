@@ -39,7 +39,7 @@ export function ServiceCard({
         <span className="text-base font-semibold text-ink">{money(service.price)}</span>
         {onSelect &&
           (selected ? (
-            <span className="grid size-6 place-items-center rounded-full bg-ink text-white">
+            <span className="grid size-6 place-items-center rounded-full bg-ink text-on-ink">
               <Check className="size-4" aria-hidden />
             </span>
           ) : (

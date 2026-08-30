@@ -32,7 +32,7 @@ export function AppointmentCard({ appointment }: { appointment: HydratedAppointm
           <MapPin className="size-3.5" aria-hidden /> {appointment.shop.area}
         </span>
         {appointment.referencePhotos.length > 0 && (
-          <span className="inline-flex items-center gap-1.5 text-rausch">
+          <span className="inline-flex items-center gap-1.5 text-ink">
             <ImageIcon className="size-3.5" aria-hidden /> {appointment.referencePhotos.length}{" "}
             reference
           </span>

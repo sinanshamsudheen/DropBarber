@@ -6,9 +6,10 @@ import { cn } from "@/lib/utils";
 
 /*
  * DESIGN.md buttons: 8px radius, weight 500, 48px tall for primary CTAs.
- * `default` is the Rausch CTA — the single brand voltage. Press state flips to
- * rausch-active with no transform and no shadow change; disabled is the pale
- * Rausch tint. `secondary` is white with a 1px ink outline; `ghost`/`link` are
+ * `default` is the amber CTA — the single brand voltage. The label is espresso
+ * (`on-amber`), never white: white on amber is 1.86:1. Press flips to
+ * amber-active with no transform and no shadow change; disabled is the pale
+ * amber tint. `secondary` is white with a 1px ink outline; `ghost`/`link` are
  * the tertiary text treatments (underline on hover, no surface).
  */
 const buttonVariants = cva(
@@ -17,7 +18,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-rausch text-white active:bg-rausch-active hover:bg-rausch-active disabled:bg-rausch-disabled disabled:text-white",
+          "bg-amber text-on-amber active:bg-amber-active hover:bg-amber-active disabled:bg-amber-disabled disabled:text-muted-soft",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50",
         outline:
@@ -27,9 +28,9 @@ const buttonVariants = cva(
         ghost: "text-ink hover:bg-surface-soft disabled:text-muted-soft",
         link: "text-ink underline-offset-4 hover:underline disabled:text-muted-soft",
         /* Pill CTA used on featured cells and the category strip. */
-        pill: "rounded-full bg-rausch text-white hover:bg-rausch-active disabled:bg-rausch-disabled",
+        pill: "rounded-full bg-amber text-on-amber hover:bg-amber-active disabled:bg-amber-disabled disabled:text-muted-soft",
         /* The circular Rausch orb terminating the search bar. */
-        orb: "rounded-full bg-rausch text-white hover:bg-rausch-active disabled:bg-rausch-disabled",
+        orb: "rounded-full bg-amber text-on-amber hover:bg-amber-active disabled:bg-amber-disabled disabled:text-muted-soft",
       },
       size: {
         default: "h-12 px-6 text-base [&_svg]:size-4",
@@ -39,7 +40,7 @@ const buttonVariants = cva(
         icon: "size-12 [&_svg]:size-5",
         "icon-sm": "size-10 [&_svg]:size-4",
         "icon-xs": "size-8 [&_svg]:size-4",
-        /* DESIGN.md button-pill-rausch: 10x20 padding, 14px label. */
+        /* DESIGN.md button-pill: 10x20 padding, 14px label. */
         pill: "h-auto px-5 py-2.5 text-sm [&_svg]:size-4",
         /* DESIGN.md search-orb: 48x48. */
         orb: "size-12 [&_svg]:size-5",

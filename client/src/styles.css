@@ -7,9 +7,32 @@
 /*
  * Drop — barber marketplace design system.
  *
- * Implements DESIGN.md: a warm, generous consumer marketplace on a pure white
- * canvas with a single brand voltage (Rausch #ff385c) carrying every primary
- * CTA, the search orb and the save state. Ink is #222222, never pure black.
+ * Takes DESIGN.md's structure — one accent voltage, a white canvas, modest
+ * display weights, soft shapes, a single shadow tier — on Drop's own palette
+ * rather than Airbnb's. Rausch (#ff385c) is Airbnb's trademarked colour, so
+ * copying it would read as a clone.
+ *
+ * The load-bearing move is that espresso REPLACES the neutral ink rather than
+ * joining amber as a second accent. Brown carries every headline, body line,
+ * border and selection fill; amber is spent only on CTAs. That keeps the
+ * one-voltage rule intact with two brand colours in play.
+ *
+ *   Role            DESIGN.md          Drop
+ *   Accent          #ff385c Rausch     #F0B429 amber
+ *   Ink             #222222 neutral    #2B1D14 espresso
+ *   Text on accent  #ffffff white      #2B1D14 espresso
+ *   Surface         #f7f7f7 cold grey  #FAF7F2 warm
+ *   Hairline        #dddddd            #E8E1D8
+ *   Canvas          #ffffff            #ffffff (unchanged)
+ *
+ * Text on accent is the structural break, and it is why --on-amber exists as
+ * its own token: white on amber is 1.86:1, unreadable. Espresso on amber is
+ * 8.74:1. Never pair `bg-amber` with `text-white` — use `text-on-amber`, which
+ * stays espresso in both colour schemes because amber stays light in both.
+ * `--on-ink` is the mirror of that rule for `bg-ink` fills, and it does flip.
+ *
+ * The greys are warm-shifted throughout: neutral greys go muddy beside a brown
+ * ink. Every text tone here clears WCAG AA on both canvas and surface-soft.
  *
  * Type: Airbnb Cereal VF is a licensed face, so we run Inter — the substitute
  * DESIGN.md names — across the whole scale. There is no second display family.
@@ -21,7 +44,7 @@
  *
  * Dark mode: DESIGN.md documents none (Airbnb's public web is light-only). The
  * .dark block below is an extrapolation kept so the class keeps working — it
- * inverts the surface/ink roles and lifts Rausch for contrast on dark ground.
+ * inverts the surface/ink roles onto deep espresso and holds amber steady.
  */
 
 @theme inline {
@@ -63,11 +86,13 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* DESIGN.md brand & surface tokens, addressable by their own names */
-  --color-rausch: var(--rausch);
-  --color-rausch-active: var(--rausch-active);
-  --color-rausch-disabled: var(--rausch-disabled);
+  /* Brand & surface tokens, addressable by their own names */
+  --color-amber: var(--amber);
+  --color-amber-active: var(--amber-active);
+  --color-amber-disabled: var(--amber-disabled);
+  --color-on-amber: var(--on-amber);
   --color-ink: var(--ink);
+  --color-on-ink: var(--on-ink);
   --color-body: var(--body-text);
   --color-muted-soft: var(--muted-soft);
   --color-hairline: var(--hairline);
@@ -98,106 +123,113 @@
 }
 
 :root {
-  --rausch: #ff385c;
-  --rausch-active: #e00b41;
-  --rausch-disabled: #ffd1da;
-  --ink: #222222;
-  --body-text: #3f3f3f;
-  --muted-soft: #929292;
-  --hairline: #dddddd;
-  --hairline-soft: #ebebeb;
-  --border-strong: #c1c1c1;
-  --surface-soft: #f7f7f7;
-  --surface-strong: #f2f2f2;
-  --legal-link: #428bff;
+  --amber: #f0b429;
+  --amber-active: #d69a12; /* press — espresso stays at 6.59:1 */
+  --amber-disabled: #fae7bc;
+  --on-amber: #2b1d14; /* 8.74:1. White here would be 1.86:1. */
+  --ink: #2b1d14;
+  --on-ink: #ffffff; /* 16.30:1 */
+  --body-text: #4a3728; /* 11.24:1 */
+  --muted-soft: #a2948a; /* disabled text only — 2.94:1 */
+  --hairline: #e8e1d8;
+  --hairline-soft: #f2ece4;
+  --border-strong: #c9bdb0;
+  --surface-soft: #faf7f2;
+  --surface-strong: #f2ede5;
+  --legal-link: #2f6fe4; /* 4.65:1 — Airbnb's #428bff is 3.30:1 */
 
   --background: #ffffff;
-  --foreground: #222222;
+  --foreground: #2b1d14;
   --card: #ffffff;
-  --card-foreground: #222222;
+  --card-foreground: #2b1d14;
   --popover: #ffffff;
-  --popover-foreground: #222222;
-  --primary: #ff385c;
-  --primary-foreground: #ffffff;
-  --secondary: #f2f2f2;
-  --secondary-foreground: #222222;
-  --muted: #f7f7f7;
-  --muted-foreground: #6a6a6a;
+  --popover-foreground: #2b1d14;
+  --primary: #f0b429;
+  --primary-foreground: #2b1d14;
+  --secondary: #f2ede5;
+  --secondary-foreground: #2b1d14;
+  --muted: #faf7f2;
+  --muted-foreground: #7a6a5c; /* 5.19:1 canvas, 4.86:1 on surface-soft */
   /* shadcn uses `accent` as the neutral hover surface, not as a brand colour. */
-  --accent: #f7f7f7;
-  --accent-foreground: #222222;
+  --accent: #faf7f2;
+  --accent-foreground: #2b1d14;
   --destructive: #c13515;
   --destructive-foreground: #ffffff;
-  --success: #008a05;
+  --success: #2f6b2a;
   --success-foreground: #ffffff;
-  --warning: #b35309;
+  --warning: #8a4b0a;
   --warning-foreground: #ffffff;
-  --border: #dddddd;
-  --input: #dddddd;
-  --ring: #222222;
+  --border: #e8e1d8;
+  --input: #e8e1d8;
+  --ring: #2b1d14;
 
-  --chart-1: #ff385c;
-  --chart-2: #222222;
-  --chart-3: #6a6a6a;
-  --chart-4: #460479;
-  --chart-5: #92174d;
+  --chart-1: #f0b429;
+  --chart-2: #2b1d14;
+  --chart-3: #7a6a5c;
+  --chart-4: #2f6b2a;
+  --chart-5: #c13515;
 
   --sidebar: #ffffff;
-  --sidebar-foreground: #222222;
-  --sidebar-primary: #ff385c;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f7f7f7;
-  --sidebar-accent-foreground: #222222;
-  --sidebar-border: #ebebeb;
-  --sidebar-ring: #222222;
+  --sidebar-foreground: #2b1d14;
+  --sidebar-primary: #f0b429;
+  --sidebar-primary-foreground: #2b1d14;
+  --sidebar-accent: #faf7f2;
+  --sidebar-accent-foreground: #2b1d14;
+  --sidebar-border: #f2ece4;
+  --sidebar-ring: #2b1d14;
 }
 
 .dark {
-  --rausch: #ff5a76;
-  --rausch-active: #ff385c;
-  --rausch-disabled: #5c2731;
-  --ink: #ffffff;
-  --body-text: #d6d6d6;
-  --muted-soft: #7a7a7a;
-  --hairline: #3a3a3a;
-  --hairline-soft: #2c2c2c;
-  --border-strong: #5a5a5a;
-  --surface-soft: #1f1f1f;
-  --surface-strong: #2a2a2a;
-  --legal-link: #6ea8ff;
+  /* Amber holds steady — it already reads on a dark ground, and holding it
+     keeps --on-amber espresso in both schemes. Press lightens instead of
+     darkening, which is the correct direction against dark. */
+  --amber: #f0b429;
+  --amber-active: #f7c64f;
+  --amber-disabled: #4a3a17;
+  --on-amber: #2b1d14; /* 8.74:1 — unchanged from light */
+  --ink: #fdfbf8; /* 18.23:1 */
+  --on-ink: #17100b;
+  --body-text: #dcd2c7; /* 12.63:1 */
+  --muted-soft: #7d7165;
+  --hairline: #3a2c21;
+  --hairline-soft: #2c2119;
+  --border-strong: #5a4838;
+  --surface-soft: #211710;
+  --surface-strong: #2e2118;
+  --legal-link: #7fa9f5; /* 7.98:1 */
 
-  --background: #121212;
-  --foreground: #ffffff;
-  --card: #1a1a1a;
-  --card-foreground: #ffffff;
-  --popover: #1a1a1a;
-  --popover-foreground: #ffffff;
-  --primary: #ff5a76;
-  --primary-foreground: #1a1a1a;
-  --secondary: #2a2a2a;
-  --secondary-foreground: #ffffff;
-  --muted: #1f1f1f;
-  --muted-foreground: #a5a5a5;
-  --accent: #1f1f1f;
-  --accent-foreground: #ffffff;
+  --background: #17100b;
+  --foreground: #fdfbf8;
+  --card: #211710;
+  --card-foreground: #fdfbf8;
+  --popover: #211710;
+  --popover-foreground: #fdfbf8;
+  --primary: #f0b429;
+  --primary-foreground: #2b1d14;
+  --secondary: #2e2118;
+  --secondary-foreground: #fdfbf8;
+  --muted: #211710;
+  --muted-foreground: #a79b8e; /* 6.92:1 on canvas, 6.46:1 on card */
+  --accent: #211710;
+  --accent-foreground: #fdfbf8;
   --destructive: #e8613c;
-  --destructive-foreground: #1a1a1a;
-  --success: #4ec06a;
-  --success-foreground: #1a1a1a;
-  --warning: #e3963f;
-  --warning-foreground: #1a1a1a;
-  --border: #3a3a3a;
-  --input: #3a3a3a;
-  --ring: #ffffff;
+  --destructive-foreground: #17100b;
+  --success: #5fa854;
+  --success-foreground: #17100b;
+  --warning: #d2842c;
+  --warning-foreground: #17100b;
+  --border: #3a2c21;
+  --input: #3a2c21;
+  --ring: #fdfbf8;
 
-  --sidebar: #1a1a1a;
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: #ff5a76;
-  --sidebar-primary-foreground: #1a1a1a;
-  --sidebar-accent: #2a2a2a;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #3a3a3a;
-  --sidebar-ring: #ffffff;
+  --sidebar: #211710;
+  --sidebar-foreground: #fdfbf8;
+  --sidebar-primary: #f0b429;
+  --sidebar-primary-foreground: #2b1d14;
+  --sidebar-accent: #2e2118;
+  --sidebar-accent-foreground: #fdfbf8;
+  --sidebar-border: #3a2c21;
+  --sidebar-ring: #fdfbf8;
 }
 
 @layer base {

@@ -54,7 +54,7 @@ export function TimeSlotPicker({
                   className={cn(
                     "min-h-12 rounded-sm border text-sm font-medium transition-colors",
                     selected
-                      ? "border-ink bg-ink text-white"
+                      ? "border-ink bg-ink text-on-ink"
                       : "border-hairline bg-card text-ink hover:border-ink",
                   )}
                 >

@@ -4,7 +4,7 @@ import type { AppointmentStatus } from "@/lib/types";
 const MAP: Record<AppointmentStatus, { label: string; className: string }> = {
   booked: {
     label: "Booked",
-    className: "border-transparent bg-ink text-white",
+    className: "border-transparent bg-ink text-on-ink",
   },
   completed: {
     label: "Completed",

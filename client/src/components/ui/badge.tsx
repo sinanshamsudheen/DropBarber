@@ -13,10 +13,11 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-transparent bg-rausch text-white type-badge px-2.5 py-1",
+        default: "border-transparent bg-amber text-on-amber type-badge px-2.5 py-1",
         secondary: "border-transparent bg-surface-strong text-ink type-badge px-2.5 py-1",
         outline: "border-hairline bg-background text-ink type-badge px-2.5 py-1",
-        destructive: "border-transparent bg-destructive text-white type-badge px-2.5 py-1",
+        destructive:
+          "border-transparent bg-destructive text-destructive-foreground type-badge px-2.5 py-1",
         favorite: "border-transparent bg-background text-ink type-badge px-2.5 py-1 shadow-float",
         tag: "border-hairline bg-background text-ink type-uppercase-tag px-1.5 py-0.5",
       },

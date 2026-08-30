@@ -51,7 +51,7 @@ export function Wordmark({ className }: { className?: string }) {
     <Link
       to="/"
       aria-label="Drop — home"
-      className={cn("inline-flex items-center gap-2 text-rausch", className)}
+      className={cn("inline-flex items-center gap-2 text-ink", className)}
     >
       <Scissors className="size-7 shrink-0" aria-hidden />
       <span className="text-[22px] font-bold leading-none tracking-tight">drop</span>
