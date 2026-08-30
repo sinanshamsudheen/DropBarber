@@ -30,7 +30,10 @@ function BarbersPage() {
   const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
 
-  const q = useQuery({ queryKey: ["barbers", shopId], queryFn: () => listBarbers(shopId) });
+  const q = useQuery({
+    queryKey: ["barbers", shopId],
+    queryFn: () => listBarbers(shopId),
+  });
 
   const toggle = useMutation({
     mutationFn: ({ barberId, active }: { barberId: string; active: boolean }) =>
@@ -73,7 +76,7 @@ function BarbersPage() {
         {q.data?.map(({ barber, todayCount }) => (
           <li
             key={barber.id}
-            className="rounded-2xl border border-border bg-card p-3.5 transition-colors hover:border-accent/40"
+            className="rounded-md border border-hairline bg-card p-3.5 transition-colors hover:border-ink"
           >
             <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
               <BarberAvatar barber={barber} />
@@ -83,7 +86,7 @@ function BarbersPage() {
                 className="min-w-0"
               >
                 <p className="truncate text-sm font-semibold">{barber.name}</p>
-                <p className="truncate text-xs text-muted-foreground">
+                <p className="truncate text-sm text-muted-foreground">
                   {barber.services.filter((s) => s.active).length} service
                   {barber.services.filter((s) => s.active).length === 1 ? "" : "s"} · {todayCount}{" "}
                   today
@@ -91,7 +94,7 @@ function BarbersPage() {
                 <div className="mt-1 flex items-center gap-3">
                   <Rating value={barber.rating} count={barber.reviewCount} />
                   {!barber.active && (
-                    <span className="text-xs font-medium text-muted-foreground">
+                    <span className="text-sm font-medium text-muted-foreground">
                       Not taking bookings
                     </span>
                   )}
@@ -99,10 +102,10 @@ function BarbersPage() {
               </Link>
               <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
             </div>
-            <div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">
+            <div className="mt-3 flex items-center justify-between gap-3 border-t border-hairline pt-3">
               <label
                 htmlFor={`active-${barber.id}`}
-                className="text-xs font-medium text-muted-foreground"
+                className="text-sm font-medium text-muted-foreground"
               >
                 Taking bookings
               </label>

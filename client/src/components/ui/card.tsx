@@ -2,11 +2,16 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+/*
+ * DESIGN.md cards: 14px radius, white surface, 1px hairline border, 24px
+ * internal padding. Flat by default — the system has one shadow tier and it is
+ * opt-in (`shadow-float`) for hover-floated cards and the reservation rail.
+ */
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("rounded-xl border bg-card text-card-foreground shadow", className)}
+      className={cn("rounded-md border border-hairline bg-card text-card-foreground", className)}
       {...props}
     />
   ),
@@ -22,11 +27,7 @@ CardHeader.displayName = "CardHeader";
 
 const CardTitle = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn("font-semibold leading-none tracking-tight", className)}
-      {...props}
-    />
+    <div ref={ref} className={cn("type-title-md text-ink", className)} {...props} />
   ),
 );
 CardTitle.displayName = "CardTitle";

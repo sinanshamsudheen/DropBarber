@@ -1,24 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Compass, LocateFixed, MapPin, Search, SlidersHorizontal, Store } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { Compass, LocateFixed, Map, Rows3, Store } from "lucide-react";
 import { useState } from "react";
 import { ShopCard } from "@/components/cards/shop-card";
 import { EmptyState, ErrorState, GridSkeleton } from "@/components/common/states";
 import { CustomerShell } from "@/components/layout/customer-shell";
+import { ShopSearchBar } from "@/components/search/shop-search-bar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import { Slider } from "@/components/ui/slider";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { listShops, nextAvailable, startingPrice } from "@/lib/api";
-import { useSession } from "@/lib/session";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -41,6 +41,13 @@ export const Route = createFileRoute("/")({
 
 type LocationState = "idle" | "requesting" | "granted" | "denied";
 
+const DEFAULT_AREA = "Indiranagar, Bengaluru";
+const RATING_TABS = [
+  { value: 0, label: "All shops" },
+  { value: 4, label: "4.0 and up" },
+  { value: 4.5, label: "4.5 and up" },
+];
+
 function DiscoverPage() {
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("");
@@ -48,7 +55,7 @@ function DiscoverPage() {
   const [view, setView] = useState<"list" | "map">("list");
   const [maxDistance, setMaxDistance] = useState(10);
   const [minRating, setMinRating] = useState(0);
-  const { user } = useSession();
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const shopsQuery = useQuery({
     queryKey: ["shops", query, location],
@@ -76,127 +83,108 @@ function DiscoverPage() {
     }, 900);
   };
 
+  const clearFilters = () => {
+    setQuery("");
+    setLocation("");
+    setMaxDistance(10);
+    setMinRating(0);
+  };
+
   return (
-    <CustomerShell>
-      <div className="border-b border-border bg-card">
-        <div className="page pb-4 pt-5">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-            <div className="min-w-0">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {locationState === "requesting" ? "Finding you…" : "Showing shops near"}
-              </p>
-              <p className="flex items-center gap-1.5 truncate text-lg font-semibold">
-                <MapPin className="size-4 shrink-0 text-accent" aria-hidden />
-                {location || "Indiranagar, Bengaluru"}
-              </p>
-            </div>
-            <Button variant="outline" size="sm" onClick={requestLocation} disabled={locationState === "requesting"}>
-              <LocateFixed className="size-4" aria-hidden />
-              <span className="hidden sm:inline">Use my location</span>
+    <CustomerShell
+      search={
+        <ShopSearchBar
+          location={location}
+          onLocationChange={setLocation}
+          query={query}
+          onQueryChange={setQuery}
+          onSubmit={() => void shopsQuery.refetch()}
+          onUseMyLocation={requestLocation}
+          locating={locationState === "requesting"}
+          onExpand={() => setSheetOpen(true)}
+          placeholderLocation={DEFAULT_AREA}
+        />
+      }
+    >
+      {/* Category strip: quick rating tabs left, view toggle right. */}
+      <div className="border-b border-hairline">
+        <div className="page flex items-center justify-between gap-6 overflow-x-auto">
+          <div role="tablist" aria-label="Filter by rating" className="flex shrink-0 gap-8">
+            {RATING_TABS.map((tab) => {
+              const active = minRating === tab.value;
+              return (
+                <button
+                  key={tab.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setMinRating(tab.value)}
+                  className={cn(
+                    "shrink-0 border-b-2 pb-4 pt-5 text-sm font-medium transition-colors",
+                    active
+                      ? "border-ink text-ink"
+                      : "border-transparent text-muted-foreground hover:border-hairline hover:text-ink",
+                  )}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2 py-3">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="rounded-full"
+              onClick={() => setSheetOpen(true)}
+            >
+              Within {maxDistance} km
             </Button>
-          </div>
-
-          {locationState === "denied" && (
-            <p className="mt-3 rounded-xl border border-warning/40 bg-warning/10 px-3 py-2 text-xs">
-              Location is unavailable. Search a neighbourhood below to keep browsing.
-            </p>
-          )}
-
-          <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-            <div className="relative min-w-0">
-              <Search
-                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-                aria-hidden
-              />
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search shops or a service"
-                aria-label="Search barber shops"
-                className="h-11 rounded-xl pl-9"
-              />
-            </div>
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="size-11 rounded-xl" aria-label="Filters">
-                  <SlidersHorizontal className="size-4" aria-hidden />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="bottom" className="rounded-t-2xl">
-                <SheetHeader>
-                  <SheetTitle>Filters</SheetTitle>
-                  <SheetDescription>Narrow down the shops near you.</SheetDescription>
-                </SheetHeader>
-                <div className="space-y-6 px-4 pb-8">
-                  <div>
-                    <label className="text-sm font-medium" htmlFor="loc">
-                      Search another location
-                    </label>
-                    <Input
-                      id="loc"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      placeholder="e.g. Koramangala"
-                      className="mt-2 h-11 rounded-xl"
-                    />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Within {maxDistance} km</p>
-                    <Slider
-                      className="mt-3"
-                      value={[maxDistance]}
-                      min={1}
-                      max={10}
-                      step={1}
-                      onValueChange={([v]) => setMaxDistance(v ?? 10)}
-                      aria-label="Maximum distance"
-                    />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Minimum rating</p>
-                    <div className="mt-2 flex gap-2">
-                      {[0, 4, 4.5].map((r) => (
-                        <Button
-                          key={r}
-                          type="button"
-                          size="sm"
-                          variant={minRating === r ? "default" : "outline"}
-                          onClick={() => setMinRating(r)}
-                        >
-                          {r === 0 ? "Any" : `${r}+`}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-
-          <div className="mt-3 flex items-center justify-between gap-3">
-            <Tabs value={view} onValueChange={(v) => setView(v as "list" | "map")}>
-              <TabsList>
-                <TabsTrigger value="list">List</TabsTrigger>
-                <TabsTrigger value="map">Map</TabsTrigger>
-              </TabsList>
-            </Tabs>
-            {!user && (
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/auth">Log in</Link>
-              </Button>
-            )}
+            <Button
+              variant="secondary"
+              size="sm"
+              className="rounded-full"
+              onClick={() => setView(view === "list" ? "map" : "list")}
+            >
+              {view === "list" ? (
+                <>
+                  <Map className="size-4" aria-hidden />
+                  Map
+                </>
+              ) : (
+                <>
+                  <Rows3 className="size-4" aria-hidden />
+                  List
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </div>
 
-      <div className="page pt-4">
+      <div className="page pb-16 pt-8">
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <h1 className="type-display-xl text-ink">Barbers in {location || DEFAULT_AREA}</h1>
+          <Button variant="link" size="sm" className="px-0" onClick={requestLocation}>
+            <LocateFixed className="size-4" aria-hidden />
+            {locationState === "requesting" ? "Finding you…" : "Use my location"}
+          </Button>
+        </div>
+
+        {locationState === "denied" && (
+          <p className="mt-4 rounded-md border border-hairline bg-surface-soft px-4 py-3 text-sm text-body">
+            Location is unavailable. Search a neighbourhood to keep browsing.
+          </p>
+        )}
+
         {view === "map" && (
-          <div className="mb-4 overflow-hidden rounded-2xl border border-border">
-            <div className="relative grid h-56 place-items-center bg-secondary">
+          <div className="mt-6 overflow-hidden rounded-md border border-hairline">
+            <div className="grid h-72 place-items-center bg-surface-soft">
               <div className="text-center">
                 <Compass className="mx-auto size-6 text-muted-foreground" aria-hidden />
-                <p className="mt-2 text-sm font-medium">Map view</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="type-title-md mt-3 text-ink">Map view</p>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Pins connect to the maps provider once the backend supplies coordinates.
                 </p>
               </div>
@@ -204,50 +192,111 @@ function DiscoverPage() {
           </div>
         )}
 
-        {shopsQuery.isPending && <GridSkeleton cards={3} />}
+        <div className="mt-8">
+          {shopsQuery.isPending && <GridSkeleton cards={8} />}
 
-        {shopsQuery.isError && (
-          <ErrorState
-            title="Search failed"
-            message={(shopsQuery.error as Error).message}
-            onRetry={() => void shopsQuery.refetch()}
-          />
-        )}
+          {shopsQuery.isError && (
+            <ErrorState
+              title="Search failed"
+              message={(shopsQuery.error as Error).message}
+              onRetry={() => void shopsQuery.refetch()}
+            />
+          )}
 
-        {shopsQuery.isSuccess && results.length === 0 && (
-          <EmptyState
-            icon={Store}
-            title="No barber shops found near this location"
-            description="Try a wider distance, a different neighbourhood, or clear your search."
-            action={
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setQuery("");
-                  setLocation("");
-                  setMaxDistance(10);
-                  setMinRating(0);
-                }}
-              >
-                Clear filters
-              </Button>
-            }
-          />
-        )}
+          {shopsQuery.isSuccess && results.length === 0 && (
+            <EmptyState
+              icon={Store}
+              title="No barber shops found near this location"
+              description="Try a wider distance, a different neighbourhood, or clear your search."
+              action={
+                <Button variant="outline" onClick={clearFilters}>
+                  Clear filters
+                </Button>
+              }
+            />
+          )}
 
-        {shopsQuery.isSuccess && results.length > 0 && (
-          <>
-            <p className="pb-3 text-sm text-muted-foreground">
-              {results.length} shop{results.length === 1 ? "" : "s"} nearby
-            </p>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {results.map((r) => (
-                <ShopCard key={r.shop.id} shop={r.shop} fromPrice={r.fromPrice} next={r.next} />
-              ))}
-            </div>
-          </>
-        )}
+          {shopsQuery.isSuccess && results.length > 0 && (
+            <>
+              <p className="pb-6 text-sm text-muted-foreground">
+                {results.length} shop{results.length === 1 ? "" : "s"} nearby
+              </p>
+              <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {results.map((r) => (
+                  <ShopCard key={r.shop.id} shop={r.shop} fromPrice={r.fromPrice} next={r.next} />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
+
+      {/* Mobile search + filter surface, opened by the collapsed pill. */}
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent side="bottom" className="rounded-t-xl">
+          <SheetHeader className="text-left">
+            <SheetTitle className="type-display-sm">Search</SheetTitle>
+            <SheetDescription>Narrow down the shops near you.</SheetDescription>
+          </SheetHeader>
+          <div className="space-y-6 pb-8 pt-6">
+            <div>
+              <Label htmlFor="filter-where">Where</Label>
+              <Input
+                id="filter-where"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder={DEFAULT_AREA}
+                className="mt-2"
+              />
+            </div>
+            <div>
+              <Label htmlFor="filter-what">What</Label>
+              <Input
+                id="filter-what"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Shop name or service"
+                className="mt-2"
+              />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-ink">Within {maxDistance} km</p>
+              <Slider
+                className="mt-4"
+                value={[maxDistance]}
+                min={1}
+                max={10}
+                step={1}
+                onValueChange={([v]) => setMaxDistance(v ?? 10)}
+                aria-label="Maximum distance"
+              />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-ink">Minimum rating</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {RATING_TABS.map((tab) => (
+                  <Button
+                    key={tab.value}
+                    type="button"
+                    size="sm"
+                    variant={minRating === tab.value ? "outline" : "secondary"}
+                    className="rounded-full"
+                    onClick={() => setMinRating(tab.value)}
+                  >
+                    {tab.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-3 border-t border-hairline pt-5">
+              <Button variant="link" className="px-0" onClick={clearFilters}>
+                Clear all
+              </Button>
+              <Button onClick={() => setSheetOpen(false)}>Show {results.length} shops</Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </CustomerShell>
   );
 }

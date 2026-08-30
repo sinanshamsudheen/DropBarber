@@ -41,7 +41,10 @@ function ServicesPage() {
   const [editing, setEditing] = useState<Service | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const q = useQuery({ queryKey: ["services", shopId], queryFn: () => listServices(shopId) });
+  const q = useQuery({
+    queryKey: ["services", shopId],
+    queryFn: () => listServices(shopId),
+  });
 
   const toggle = useMutation({
     mutationFn: (service: Service) =>
@@ -99,17 +102,17 @@ function ServicesPage() {
 
       <ul className="space-y-2">
         {q.data?.map((service) => (
-          <li key={service.id} className="rounded-2xl border border-border bg-card p-4">
+          <li key={service.id} className="rounded-md border border-hairline bg-card p-4">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">{service.name}</p>
-                <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
                   {service.description}
                 </p>
               </div>
               <span className="shrink-0 text-sm font-semibold">{money(service.price)}</span>
             </div>
-            <div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">
+            <div className="mt-3 flex items-center justify-between gap-3 border-t border-hairline pt-3">
               <div className="flex items-center gap-2">
                 <Switch
                   id={`service-active-${service.id}`}
@@ -119,7 +122,7 @@ function ServicesPage() {
                 />
                 <label
                   htmlFor={`service-active-${service.id}`}
-                  className="text-xs font-medium text-muted-foreground"
+                  className="text-sm font-medium text-muted-foreground"
                 >
                   {service.active ? "Bookable" : "Hidden from customers"}
                 </label>
@@ -204,12 +207,12 @@ function ServiceFormDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Haircut + beard"
-              className="mt-1.5 h-11"
+              className="mt-2"
               aria-invalid={!!error}
               aria-describedby={error ? "service-name-error" : undefined}
             />
             {error && (
-              <p id="service-name-error" role="alert" className="mt-1.5 text-xs text-destructive">
+              <p id="service-name-error" role="alert" className="mt-1.5 text-sm text-destructive">
                 {error}
               </p>
             )}
@@ -231,7 +234,7 @@ function ServiceFormDialog({
               inputMode="numeric"
               value={price}
               onChange={(e) => setPrice(e.target.value.replace(/[^\d]/g, ""))}
-              className="mt-1.5 h-11"
+              className="mt-2"
             />
           </div>
 

@@ -3,17 +3,22 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
+/*
+ * DESIGN.md badges are rounded pills at 11px / 600. `favorite` is the floating
+ * "Guest favorite" plate that sits over a photo — white surface carrying the
+ * system's single shadow tier. `tag` is the tiny uppercase "NEW" marker.
+ */
 const badgeVariants = cva(
-  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80",
-        secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        destructive:
-          "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
-        outline: "text-foreground",
+        default: "border-transparent bg-rausch text-white type-badge px-2.5 py-1",
+        secondary: "border-transparent bg-surface-strong text-ink type-badge px-2.5 py-1",
+        outline: "border-hairline bg-background text-ink type-badge px-2.5 py-1",
+        destructive: "border-transparent bg-destructive text-white type-badge px-2.5 py-1",
+        favorite: "border-transparent bg-background text-ink type-badge px-2.5 py-1 shadow-float",
+        tag: "border-hairline bg-background text-ink type-uppercase-tag px-1.5 py-0.5",
       },
     },
     defaultVariants: {

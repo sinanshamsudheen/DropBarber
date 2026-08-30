@@ -6,22 +6,39 @@
 
 /*
  * Drop — barber marketplace design system.
- * Warm paper background, espresso ink, copper accent.
- * All colours are oklch tokens; components must never hardcode colours.
+ *
+ * Implements DESIGN.md: a warm, generous consumer marketplace on a pure white
+ * canvas with a single brand voltage (Rausch #ff385c) carrying every primary
+ * CTA, the search orb and the save state. Ink is #222222, never pure black.
+ *
+ * Type: Airbnb Cereal VF is a licensed face, so we run Inter — the substitute
+ * DESIGN.md names — across the whole scale. There is no second display family.
+ *
+ * Shape: every interactive element is rounded. Buttons 8px, cards 14px, search
+ * bar and orbs fully circular. No hard corners outside the body grid.
+ *
+ * Elevation: exactly one shadow tier (--shadow-float) plus the flat baseline.
+ *
+ * Dark mode: DESIGN.md documents none (Airbnb's public web is light-only). The
+ * .dark block below is an extrapolation kept so the class keeps working — it
+ * inverts the surface/ink roles and lifts Rausch for contrast on dark ground.
  */
 
 @theme inline {
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-sans:
+    Inter, "Airbnb Cereal VF", Circular, -apple-system, system-ui, Roboto, "Helvetica Neue",
+    sans-serif;
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  /* DESIGN.md `rounded` scale, one-to-one. */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 32px;
+  --radius-2xl: 32px;
+  --radius-3xl: 32px;
 
+  /* shadcn semantic layer */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -42,16 +59,30 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
-  --color-surface: var(--surface);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-ring-offset-background: var(--background);
+
+  /* DESIGN.md brand & surface tokens, addressable by their own names */
+  --color-rausch: var(--rausch);
+  --color-rausch-active: var(--rausch-active);
+  --color-rausch-disabled: var(--rausch-disabled);
+  --color-ink: var(--ink);
+  --color-body: var(--body-text);
+  --color-muted-soft: var(--muted-soft);
+  --color-hairline: var(--hairline);
+  --color-hairline-soft: var(--hairline-soft);
+  --color-border-strong: var(--border-strong);
+  --color-surface-soft: var(--surface-soft);
+  --color-surface-strong: var(--surface-strong);
+  --color-legal-link: var(--legal-link);
+
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -61,84 +92,112 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --shadow-card: 0 1px 2px oklch(0.2 0.02 60 / 0.05), 0 8px 24px -16px oklch(0.2 0.02 60 / 0.25);
-  --shadow-raised: 0 2px 6px oklch(0.2 0.02 60 / 0.07), 0 18px 40px -24px oklch(0.2 0.02 60 / 0.35);
+  /* The single shadow definition in the entire system. */
+  --shadow-float:
+    0 0 0 1px rgb(0 0 0 / 0.02), 0 2px 6px 0 rgb(0 0 0 / 0.04), 0 4px 8px 0 rgb(0 0 0 / 0.1);
 }
 
 :root {
-  --radius: 0.875rem;
-  --background: oklch(0.985 0.006 85);
-  --foreground: oklch(0.22 0.018 60);
-  --surface: oklch(0.965 0.009 85);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.018 60);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.018 60);
-  --primary: oklch(0.28 0.028 55);
-  --primary-foreground: oklch(0.98 0.008 85);
-  --secondary: oklch(0.945 0.012 85);
-  --secondary-foreground: oklch(0.28 0.028 55);
-  --muted: oklch(0.955 0.008 85);
-  --muted-foreground: oklch(0.52 0.02 60);
-  --accent: oklch(0.66 0.13 52);
-  --accent-foreground: oklch(0.99 0.006 85);
-  --destructive: oklch(0.55 0.19 27);
-  --destructive-foreground: oklch(0.99 0.006 85);
-  --success: oklch(0.55 0.11 155);
-  --success-foreground: oklch(0.99 0.006 85);
-  --warning: oklch(0.75 0.14 75);
-  --warning-foreground: oklch(0.25 0.03 60);
-  --border: oklch(0.9 0.012 80);
-  --input: oklch(0.9 0.012 80);
-  --ring: oklch(0.66 0.13 52);
-  --chart-1: oklch(0.66 0.13 52);
-  --chart-2: oklch(0.55 0.11 155);
-  --chart-3: oklch(0.28 0.028 55);
-  --chart-4: oklch(0.75 0.14 75);
-  --chart-5: oklch(0.52 0.02 60);
-  --sidebar: oklch(0.975 0.008 85);
-  --sidebar-foreground: oklch(0.22 0.018 60);
-  --sidebar-primary: oklch(0.28 0.028 55);
-  --sidebar-primary-foreground: oklch(0.98 0.008 85);
-  --sidebar-accent: oklch(0.94 0.014 80);
-  --sidebar-accent-foreground: oklch(0.28 0.028 55);
-  --sidebar-border: oklch(0.9 0.012 80);
-  --sidebar-ring: oklch(0.66 0.13 52);
+  --rausch: #ff385c;
+  --rausch-active: #e00b41;
+  --rausch-disabled: #ffd1da;
+  --ink: #222222;
+  --body-text: #3f3f3f;
+  --muted-soft: #929292;
+  --hairline: #dddddd;
+  --hairline-soft: #ebebeb;
+  --border-strong: #c1c1c1;
+  --surface-soft: #f7f7f7;
+  --surface-strong: #f2f2f2;
+  --legal-link: #428bff;
+
+  --background: #ffffff;
+  --foreground: #222222;
+  --card: #ffffff;
+  --card-foreground: #222222;
+  --popover: #ffffff;
+  --popover-foreground: #222222;
+  --primary: #ff385c;
+  --primary-foreground: #ffffff;
+  --secondary: #f2f2f2;
+  --secondary-foreground: #222222;
+  --muted: #f7f7f7;
+  --muted-foreground: #6a6a6a;
+  /* shadcn uses `accent` as the neutral hover surface, not as a brand colour. */
+  --accent: #f7f7f7;
+  --accent-foreground: #222222;
+  --destructive: #c13515;
+  --destructive-foreground: #ffffff;
+  --success: #008a05;
+  --success-foreground: #ffffff;
+  --warning: #b35309;
+  --warning-foreground: #ffffff;
+  --border: #dddddd;
+  --input: #dddddd;
+  --ring: #222222;
+
+  --chart-1: #ff385c;
+  --chart-2: #222222;
+  --chart-3: #6a6a6a;
+  --chart-4: #460479;
+  --chart-5: #92174d;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #222222;
+  --sidebar-primary: #ff385c;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f7f7f7;
+  --sidebar-accent-foreground: #222222;
+  --sidebar-border: #ebebeb;
+  --sidebar-ring: #222222;
 }
 
 .dark {
-  --background: oklch(0.18 0.014 60);
-  --foreground: oklch(0.96 0.007 85);
-  --surface: oklch(0.22 0.016 60);
-  --card: oklch(0.23 0.016 60);
-  --card-foreground: oklch(0.96 0.007 85);
-  --popover: oklch(0.23 0.016 60);
-  --popover-foreground: oklch(0.96 0.007 85);
-  --primary: oklch(0.95 0.008 85);
-  --primary-foreground: oklch(0.22 0.018 60);
-  --secondary: oklch(0.28 0.018 60);
-  --secondary-foreground: oklch(0.96 0.007 85);
-  --muted: oklch(0.28 0.018 60);
-  --muted-foreground: oklch(0.72 0.015 70);
-  --accent: oklch(0.72 0.13 55);
-  --accent-foreground: oklch(0.19 0.02 60);
-  --destructive: oklch(0.65 0.18 27);
-  --destructive-foreground: oklch(0.15 0.02 60);
-  --success: oklch(0.68 0.12 155);
-  --success-foreground: oklch(0.16 0.02 60);
-  --warning: oklch(0.8 0.13 75);
-  --warning-foreground: oklch(0.2 0.02 60);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.72 0.13 55);
-  --sidebar: oklch(0.21 0.016 60);
-  --sidebar-foreground: oklch(0.96 0.007 85);
-  --sidebar-primary: oklch(0.72 0.13 55);
-  --sidebar-primary-foreground: oklch(0.18 0.02 60);
-  --sidebar-accent: oklch(0.28 0.018 60);
-  --sidebar-accent-foreground: oklch(0.96 0.007 85);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.72 0.13 55);
+  --rausch: #ff5a76;
+  --rausch-active: #ff385c;
+  --rausch-disabled: #5c2731;
+  --ink: #ffffff;
+  --body-text: #d6d6d6;
+  --muted-soft: #7a7a7a;
+  --hairline: #3a3a3a;
+  --hairline-soft: #2c2c2c;
+  --border-strong: #5a5a5a;
+  --surface-soft: #1f1f1f;
+  --surface-strong: #2a2a2a;
+  --legal-link: #6ea8ff;
+
+  --background: #121212;
+  --foreground: #ffffff;
+  --card: #1a1a1a;
+  --card-foreground: #ffffff;
+  --popover: #1a1a1a;
+  --popover-foreground: #ffffff;
+  --primary: #ff5a76;
+  --primary-foreground: #1a1a1a;
+  --secondary: #2a2a2a;
+  --secondary-foreground: #ffffff;
+  --muted: #1f1f1f;
+  --muted-foreground: #a5a5a5;
+  --accent: #1f1f1f;
+  --accent-foreground: #ffffff;
+  --destructive: #e8613c;
+  --destructive-foreground: #1a1a1a;
+  --success: #4ec06a;
+  --success-foreground: #1a1a1a;
+  --warning: #e3963f;
+  --warning-foreground: #1a1a1a;
+  --border: #3a3a3a;
+  --input: #3a3a3a;
+  --ring: #ffffff;
+
+  --sidebar: #1a1a1a;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ff5a76;
+  --sidebar-primary-foreground: #1a1a1a;
+  --sidebar-accent: #2a2a2a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #3a3a3a;
+  --sidebar-ring: #ffffff;
 }
 
 @layer base {
@@ -157,12 +216,14 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  /*
+   * Display weights stay modest — the system trusts photography and whitespace
+   * over typographic muscle. Sizes are set per-usage from the scale below.
+   */
   h1,
   h2,
   h3 {
-    font-family: var(--font-display);
-    font-optical-sizing: auto;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
   }
 
   :focus-visible {
@@ -171,14 +232,91 @@
   }
 }
 
-@utility page {
-  @apply mx-auto w-full max-w-2xl px-4;
+/* --- DESIGN.md type scale ------------------------------------------------ */
+
+@utility type-display-xl {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.43;
+  letter-spacing: 0;
 }
 
+@utility type-display-lg {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.18;
+  letter-spacing: -0.44px;
+}
+
+@utility type-display-md {
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.43;
+  letter-spacing: 0;
+}
+
+@utility type-display-sm {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.18px;
+}
+
+@utility type-rating-display {
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -1px;
+}
+
+@utility type-title-md {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+@utility type-title-sm {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+@utility type-badge {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.18;
+}
+
+@utility type-uppercase-tag {
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.32px;
+  text-transform: uppercase;
+}
+
+/* --- Containers ---------------------------------------------------------- */
+
+/* Marketplace / editorial width. */
+@utility page {
+  @apply mx-auto w-full max-w-[1280px] px-6 sm:px-10;
+}
+
+/* Listing-detail width — keeps the photo banner and reservation rail readable. */
+@utility page-narrow {
+  @apply mx-auto w-full max-w-[1080px] px-6 sm:px-10;
+}
+
+/* Dense dashboard surfaces. */
 @utility page-wide {
-  @apply mx-auto w-full max-w-6xl px-4;
+  @apply mx-auto w-full max-w-[1440px] px-6 sm:px-10;
+}
+
+/* Forms and single-column reading columns. */
+@utility page-form {
+  @apply mx-auto w-full max-w-[560px] px-6;
 }
 
 @utility hairline {
-  @apply border border-border/70;
+  @apply border border-hairline;
 }

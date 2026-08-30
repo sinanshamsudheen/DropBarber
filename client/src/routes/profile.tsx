@@ -21,9 +21,15 @@ export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
       { title: "Your profile — Drop" },
-      { name: "description", content: "Manage your details, saved style photos and privacy settings." },
+      {
+        name: "description",
+        content: "Manage your details, saved style photos and privacy settings.",
+      },
       { property: "og:title", content: "Your profile — Drop" },
-      { property: "og:description", content: "Your details, saved style photos and privacy controls." },
+      {
+        property: "og:description",
+        content: "Your details, saved style photos and privacy controls.",
+      },
     ],
   }),
   component: ProfilePage,
@@ -33,7 +39,11 @@ function ProfilePage() {
   const { user, ready, logout } = useSession();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const q = useQuery({ queryKey: ["profile"], queryFn: () => getCustomerProfile(), enabled: !!user });
+  const q = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => getCustomerProfile(),
+    enabled: !!user,
+  });
 
   const [preferences, setPreferences] = useState("");
   const [phone, setPhone] = useState("");
@@ -49,7 +59,12 @@ function ProfilePage() {
   }, [q.data]);
 
   const save = useMutation({
-    mutationFn: () => saveCustomerProfile(CURRENT_CUSTOMER_ID, { preferences, phone, savedPhotos: photos }),
+    mutationFn: () =>
+      saveCustomerProfile(CURRENT_CUSTOMER_ID, {
+        preferences,
+        phone,
+        savedPhotos: photos,
+      }),
     onSuccess: () => {
       toast.success("Profile saved");
       void queryClient.invalidateQueries({ queryKey: ["profile"] });
@@ -60,7 +75,7 @@ function ProfilePage() {
   if (ready && !user) {
     return (
       <CustomerShell>
-        <div className="page">
+        <div className="page-narrow pb-16">
           <PageHeader title="Profile" />
           <EmptyState
             icon={Lock}
@@ -79,22 +94,24 @@ function ProfilePage() {
 
   return (
     <CustomerShell>
-      <div className="page">
+      <div className="page-narrow pb-16">
         <PageHeader title="Profile" />
 
         {q.isPending && <ListSkeleton rows={3} />}
 
         {q.data && (
-          <div className="space-y-6">
-            <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
+          <div className="space-y-10">
+            <div className="flex items-center gap-5 rounded-md border border-hairline bg-card p-6">
               <Avatar className="size-16">
-                <AvatarFallback className="bg-secondary font-display text-lg">
+                <AvatarFallback className="text-lg">
                   {initials(user?.name ?? q.data.name)}
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0">
-                <p className="truncate text-lg font-semibold">{user?.name ?? q.data.name}</p>
-                <p className="truncate text-sm text-muted-foreground">{user?.email ?? q.data.email}</p>
+                <p className="type-display-sm truncate text-ink">{user?.name ?? q.data.name}</p>
+                <p className="truncate text-sm text-muted-foreground">
+                  {user?.email ?? q.data.email}
+                </p>
                 <p className="truncate text-sm text-muted-foreground">{q.data.phone}</p>
               </div>
             </div>
@@ -102,12 +119,12 @@ function ProfilePage() {
             {user?.memberships.length ? (
               <Link
                 to="/manage"
-                className="flex items-center gap-3 rounded-2xl border border-accent/30 bg-accent/8 p-4"
+                className="flex items-center gap-4 rounded-md border border-hairline bg-surface-soft p-5 transition-shadow hover:shadow-float"
               >
-                <Store className="size-5 shrink-0 text-accent" aria-hidden />
+                <Store className="size-5 shrink-0 text-rausch" aria-hidden />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold">Shop workspace</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="type-title-md text-ink">Shop workspace</p>
+                  <p className="text-sm text-muted-foreground">
                     Manage appointments, customers and staff for your {user.memberships.length} shop
                     {user.memberships.length > 1 ? "s" : ""}.
                   </p>
@@ -116,50 +133,53 @@ function ProfilePage() {
               </Link>
             ) : null}
 
-            <Link to="/history" className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
-              <Clock3 className="size-5 shrink-0 text-accent" aria-hidden />
+            <Link
+              to="/history"
+              className="flex items-center gap-4 rounded-md border border-hairline bg-card p-5 transition-shadow hover:shadow-float"
+            >
+              <Clock3 className="size-5 shrink-0 text-ink" aria-hidden />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold">Your visit history</p>
-                <p className="text-xs text-muted-foreground">Across every shop you've been to.</p>
+                <p className="type-title-md text-ink">Your visit history</p>
+                <p className="text-sm text-muted-foreground">Across every shop you've been to.</p>
               </div>
               <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
             </Link>
 
             <section>
-              <h2 className="text-base font-semibold">Contact details</h2>
-              <div className="mt-3 space-y-3 rounded-2xl border border-border bg-card p-4">
+              <h2 className="type-display-md text-ink">Contact details</h2>
+              <div className="mt-4 rounded-md border border-hairline bg-card p-6">
                 <div>
                   <Label htmlFor="phone">Phone</Label>
                   <Input
                     id="phone"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="mt-1.5 h-11"
+                    className="mt-2"
                   />
                 </div>
               </div>
             </section>
 
             <section>
-              <h2 className="text-base font-semibold">Saved preferences</h2>
-              <p className="text-xs text-muted-foreground">
+              <h2 className="type-display-md text-ink">Saved preferences</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
                 Shared with a shop only when you book with them.
               </p>
               <Textarea
                 value={preferences}
                 onChange={(e) => setPreferences(e.target.value)}
                 placeholder="e.g. Number 2 on the sides, scissors on top"
-                className="mt-3 min-h-24"
+                className="mt-4"
               />
             </section>
 
             <section>
-              <h2 className="text-base font-semibold">Saved style photos</h2>
-              <p className="text-xs text-muted-foreground">
-                These stay on your profile and can be reused for any booking. A reference photo added during
-                booking belongs to that appointment only.
+              <h2 className="type-display-md text-ink">Saved style photos</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                These stay on your profile and can be reused for any booking. A reference photo
+                added during booking belongs to that appointment only.
               </p>
-              <div className="mt-3">
+              <div className="mt-4">
                 <ReferencePhotoUploader
                   photos={photos}
                   onChange={setPhotos}
@@ -171,17 +191,17 @@ function ProfilePage() {
             </section>
 
             <section>
-              <h2 className="text-base font-semibold">Privacy</h2>
-              <div className="mt-3 space-y-3 rounded-2xl border border-border bg-card p-4">
+              <h2 className="type-display-md text-ink">Privacy</h2>
+              <div className="mt-4 space-y-5 rounded-md border border-hairline bg-card p-6">
                 <div className="flex items-start gap-3">
-                  <ShieldCheck className="mt-0.5 size-4 shrink-0 text-success" aria-hidden />
-                  <p className="text-xs text-muted-foreground">
-                    Shops can only see their own history with you — never your visits to other shops. Finished
-                    haircut photos are never made public.
+                  <ShieldCheck className="mt-0.5 size-4 shrink-0 text-ink" aria-hidden />
+                  <p className="text-sm text-muted-foreground">
+                    Shops can only see their own history with you — never your visits to other
+                    shops. Finished haircut photos are never made public.
                   </p>
                 </div>
                 <div className="flex items-center justify-between gap-4">
-                  <Label htmlFor="share" className="text-sm font-normal">
+                  <Label htmlFor="share" className="font-normal">
                     Share my saved preferences with shops I book
                   </Label>
                   <Switch id="share" checked={shareHistory} onCheckedChange={setShareHistory} />
@@ -189,19 +209,17 @@ function ProfilePage() {
               </div>
             </section>
 
-            <div className="space-y-2 pb-4">
+            <div className="flex flex-col gap-3 border-t border-hairline pt-8 sm:flex-row">
               <Button
-                size="lg"
-                className="h-12 w-full rounded-xl"
+                className="w-full sm:w-auto"
                 disabled={save.isPending}
                 onClick={() => save.mutate()}
               >
                 {save.isPending ? "Saving…" : "Save changes"}
               </Button>
               <Button
-                variant="outline"
-                size="lg"
-                className="h-12 w-full rounded-xl"
+                variant="secondary"
+                className="w-full sm:w-auto"
                 onClick={() => {
                   logout();
                   toast.success("Logged out");

@@ -18,14 +18,16 @@ export function TimeSlotPicker({
     return (
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4" aria-busy="true">
         {Array.from({ length: 9 }).map((_, i) => (
-          <Skeleton key={i} className="h-11 rounded-xl" />
+          <Skeleton key={i} className="h-12 rounded-sm" />
         ))}
       </div>
     );
   }
 
   const morning = slots.filter((s) => Number(s.time.slice(0, 2)) < 12);
-  const afternoon = slots.filter((s) => Number(s.time.slice(0, 2)) >= 12 && Number(s.time.slice(0, 2)) < 17);
+  const afternoon = slots.filter(
+    (s) => Number(s.time.slice(0, 2)) >= 12 && Number(s.time.slice(0, 2)) < 17,
+  );
   const evening = slots.filter((s) => Number(s.time.slice(0, 2)) >= 17);
 
   const groups = [
@@ -38,7 +40,7 @@ export function TimeSlotPicker({
     <div role="radiogroup" aria-label="Available times" className="space-y-5">
       {groups.map((group) => (
         <div key={group.label}>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.label}</p>
+          <p className="mb-3 text-sm font-medium text-muted-foreground">{group.label}</p>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {group.items.map((slot) => {
               const selected = slot.time === value;
@@ -50,10 +52,10 @@ export function TimeSlotPicker({
                   aria-checked={selected}
                   onClick={() => onChange(slot.time)}
                   className={cn(
-                    "min-h-11 rounded-xl border text-sm font-medium transition-colors",
+                    "min-h-12 rounded-sm border text-sm font-medium transition-colors",
                     selected
-                      ? "border-accent bg-accent text-accent-foreground"
-                      : "border-border bg-card hover:border-accent/50",
+                      ? "border-ink bg-ink text-white"
+                      : "border-hairline bg-card text-ink hover:border-ink",
                   )}
                 >
                   {timeLabel(slot.time)}

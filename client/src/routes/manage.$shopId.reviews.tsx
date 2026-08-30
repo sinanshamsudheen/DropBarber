@@ -50,24 +50,24 @@ function ReviewsPage() {
 
       {q.data && q.data.total > 0 && (
         <div className="space-y-6">
-          <section className="grid gap-5 rounded-2xl border border-border bg-card p-5 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
+          <section className="grid gap-5 rounded-md border border-hairline bg-card p-5 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
             <div className="text-center sm:text-left">
-              <p className="font-display text-4xl font-semibold">{q.data.average.toFixed(1)}</p>
-              <p className="mt-1 flex items-center justify-center gap-1 text-xs text-muted-foreground sm:justify-start">
-                <Star className="size-3.5 fill-accent text-accent" aria-hidden />
+              <p className="font-semibold text-4xl font-semibold">{q.data.average.toFixed(1)}</p>
+              <p className="mt-1 flex items-center justify-center gap-1 text-sm text-muted-foreground sm:justify-start">
+                <Star className="size-3.5 fill-ink text-ink" aria-hidden />
                 {q.data.total} review{q.data.total === 1 ? "" : "s"}
               </p>
             </div>
             <ul className="space-y-1.5">
               {q.data.distribution.map((row) => (
                 <li key={row.star} className="flex items-center gap-3">
-                  <span className="w-8 shrink-0 text-xs text-muted-foreground">{row.star}★</span>
+                  <span className="w-8 shrink-0 text-sm text-muted-foreground">{row.star}★</span>
                   <Progress
                     value={q.data.total ? (row.count / q.data.total) * 100 : 0}
                     className="h-2 flex-1"
                     aria-label={`${row.count} of ${q.data.total} reviews rated ${row.star} stars`}
                   />
-                  <span className="w-6 shrink-0 text-right text-xs text-muted-foreground">
+                  <span className="w-6 shrink-0 text-right text-sm text-muted-foreground">
                     {row.count}
                   </span>
                 </li>
@@ -76,9 +76,7 @@ function ReviewsPage() {
           </section>
 
           <section>
-            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Recent reviews
-            </h2>
+            <h2 className="mb-2 type-display-sm text-ink">Recent reviews</h2>
             <ul className="space-y-3">
               {q.data.reviews.map((review) => (
                 <li key={review.id}>

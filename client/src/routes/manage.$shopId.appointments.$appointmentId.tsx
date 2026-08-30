@@ -29,7 +29,10 @@ function ManageAppointmentDetail() {
   const queryClient = useQueryClient();
   const { user } = useSession();
 
-  const q = useQuery({ queryKey: ["appointment", appointmentId], queryFn: () => getAppointment(appointmentId) });
+  const q = useQuery({
+    queryKey: ["appointment", appointmentId],
+    queryFn: () => getAppointment(appointmentId),
+  });
   const historyQuery = useQuery({
     queryKey: ["shop-customer", shopId, q.data?.customerId],
     queryFn: () => getShopCustomer(shopId, q.data!.customerId),
@@ -49,9 +52,13 @@ function ManageAppointmentDetail() {
   }, [q.data]);
 
   const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["appointment", appointmentId] });
+    void queryClient.invalidateQueries({
+      queryKey: ["appointment", appointmentId],
+    });
     void queryClient.invalidateQueries({ queryKey: ["shop-day", shopId] });
-    void queryClient.invalidateQueries({ queryKey: ["shop-appointments", shopId] });
+    void queryClient.invalidateQueries({
+      queryKey: ["shop-appointments", shopId],
+    });
     void queryClient.invalidateQueries({ queryKey: ["barber-points", shopId] });
   };
 
@@ -100,13 +107,18 @@ function ManageAppointmentDetail() {
   return (
     <div className="space-y-6">
       <button
-        onClick={() => void navigate({ to: "/manage/$shopId/appointments", params: { shopId } })}
+        onClick={() =>
+          void navigate({
+            to: "/manage/$shopId/appointments",
+            params: { shopId },
+          })
+        }
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"
       >
         <ArrowLeft className="size-4" aria-hidden /> Appointments
       </button>
 
-      <header className="rounded-2xl border border-border bg-card p-4">
+      <header className="rounded-md border border-hairline bg-card p-4">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
           <div className="min-w-0">
             <h1 className="truncate text-xl font-semibold">{a.customer.name}</h1>
@@ -122,12 +134,12 @@ function ManageAppointmentDetail() {
           <Field label="Booked price" value={money(a.price)} />
           <Field label="Phone" value={a.customer.phone} />
         </dl>
-        {a.note && <p className="mt-3 rounded-xl bg-secondary p-3 text-sm">“{a.note}”</p>}
+        {a.note && <p className="mt-3 rounded-sm bg-surface-strong p-3 text-sm">“{a.note}”</p>}
         <div className="mt-3">
           <Link
             to="/manage/$shopId/customers/$customerId"
             params={{ shopId, customerId: a.customerId }}
-            className="text-sm font-medium text-accent underline-offset-4 hover:underline"
+            className="text-sm font-medium text-ink underline-offset-4 hover:underline"
           >
             View customer profile
           </Link>
@@ -136,12 +148,10 @@ function ManageAppointmentDetail() {
 
       {a.referencePhotos.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Reference photos
-          </h2>
+          <h2 className="type-display-sm text-ink">Reference photos</h2>
           <div className="mt-2 grid grid-cols-3 gap-2">
             {a.referencePhotos.map((p) => (
-              <figure key={p.id} className="overflow-hidden rounded-xl border border-border">
+              <figure key={p.id} className="overflow-hidden rounded-sm border border-hairline">
                 <img
                   src={p.url}
                   alt={p.caption ? p.caption : "Reference photo"}
@@ -155,22 +165,20 @@ function ManageAppointmentDetail() {
       )}
 
       <section>
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Previous visits at this shop
-        </h2>
+        <h2 className="type-display-sm text-ink">Previous visits at this shop</h2>
         {pastVisits.length === 0 ? (
           <p className="mt-2 text-sm text-muted-foreground">First time with you — make it count.</p>
         ) : (
           <ul className="mt-2 space-y-2">
             {pastVisits.slice(0, 4).map((v) => (
-              <li key={v.id} className="rounded-xl border border-border bg-card p-3 text-sm">
+              <li key={v.id} className="rounded-sm border border-hairline bg-card p-3 text-sm">
                 <p className="font-medium">
                   {longDate(v.date)} · {v.completion?.actualService ?? v.service.name}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   {v.barber.name} · {money(v.completion?.finalPrice ?? v.price)}
                 </p>
-                {v.completion?.notes && <p className="mt-1 text-xs">“{v.completion.notes}”</p>}
+                {v.completion?.notes && <p className="mt-1 text-sm">“{v.completion.notes}”</p>}
               </li>
             ))}
           </ul>
@@ -178,7 +186,7 @@ function ManageAppointmentDetail() {
       </section>
 
       {a.status === "completed" ? (
-        <section className="rounded-2xl border border-success/30 bg-success/8 p-4">
+        <section className="rounded-md border border-success/30 bg-success/8 p-4">
           <h2 className="flex items-center gap-2 text-sm font-semibold">
             <CheckCircle2 className="size-4 text-success" aria-hidden /> Service record
           </h2>
@@ -200,20 +208,25 @@ function ManageAppointmentDetail() {
               src={a.completion.finishedPhoto}
               alt="Finished haircut"
               loading="lazy"
-              className="mt-3 aspect-square w-32 rounded-xl object-cover"
+              className="mt-3 aspect-square w-32 rounded-sm object-cover"
             />
           )}
         </section>
       ) : a.status === "booked" ? (
-        <section className="rounded-2xl border border-border bg-card p-4">
+        <section className="rounded-md border border-hairline bg-card p-4">
           <h2 className="text-base font-semibold">Complete the record</h2>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Logged by {user?.name ?? "you"}. Completing a record earns 10 points.
           </p>
           <div className="mt-4 space-y-3">
             <div>
               <Label htmlFor="svc">Service actually performed</Label>
-              <Input id="svc" value={actualService} onChange={(e) => setActualService(e.target.value)} className="mt-1.5 h-11" />
+              <Input
+                id="svc"
+                value={actualService}
+                onChange={(e) => setActualService(e.target.value)}
+                className="mt-2"
+              />
             </div>
             <div>
               <Label htmlFor="price">Final price (₹)</Label>
@@ -222,7 +235,7 @@ function ManageAppointmentDetail() {
                 inputMode="numeric"
                 value={finalPrice}
                 onChange={(e) => setFinalPrice(e.target.value.replace(/[^\d]/g, ""))}
-                className="mt-1.5 h-11"
+                className="mt-2"
               />
             </div>
             <div>
@@ -244,7 +257,6 @@ function ManageAppointmentDetail() {
                   value={finishedPhoto}
                   onChange={(e) => setFinishedPhoto(e.target.value)}
                   placeholder="Optional — never shown publicly"
-                  className="h-11"
                 />
               </div>
             </div>
@@ -252,14 +264,18 @@ function ManageAppointmentDetail() {
           <div className="mt-4 space-y-2">
             <Button
               size="lg"
-              className="h-12 w-full rounded-xl"
+              className="w-full"
               disabled={complete.isPending || !actualService}
               onClick={() => complete.mutate()}
             >
               {complete.isPending ? "Saving…" : "Complete record"}
             </Button>
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" disabled={quickClose.isPending} onClick={() => quickClose.mutate()}>
+              <Button
+                variant="outline"
+                disabled={quickClose.isPending}
+                onClick={() => quickClose.mutate()}
+              >
                 Done, skip details
               </Button>
               <Button variant="outline" disabled={noShow.isPending} onClick={() => noShow.mutate()}>
@@ -269,7 +285,7 @@ function ManageAppointmentDetail() {
           </div>
         </section>
       ) : (
-        <section className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
+        <section className="rounded-md border border-hairline bg-card p-4 text-sm text-muted-foreground">
           This appointment was {a.status === "no_show" ? "marked as a no-show" : "cancelled"}.
         </section>
       )}
@@ -280,7 +296,7 @@ function ManageAppointmentDetail() {
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dt className="text-sm text-muted-foreground">{label}</dt>
       <dd className="truncate font-medium">{value}</dd>
     </div>
   );

@@ -11,7 +11,10 @@ export const Route = createFileRoute("/manage/")({
       { title: "Shop workspace — Drop" },
       { name: "description", content: "Pick the shop you want to manage." },
       { property: "og:title", content: "Shop workspace — Drop" },
-      { property: "og:description", content: "Pick the shop you want to manage." },
+      {
+        property: "og:description",
+        content: "Pick the shop you want to manage.",
+      },
     ],
   }),
   component: ShopSelector,
@@ -47,7 +50,9 @@ function ShopSelector() {
   return (
     <div className="page py-8">
       <h1 className="text-2xl font-semibold">Choose a shop</h1>
-      <p className="mt-1 text-sm text-muted-foreground">You manage {user.memberships.length} shops.</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        You manage {user.memberships.length} shops.
+      </p>
       <ul className="mt-5 space-y-3">
         {user.memberships.map((m) => {
           const shop = shops.find((s) => s.id === m.shopId);
@@ -56,17 +61,17 @@ function ShopSelector() {
               <Link
                 to="/manage/$shopId"
                 params={{ shopId: m.shopId }}
-                className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-accent/50"
+                className="flex items-center gap-3 rounded-md border border-hairline bg-card p-4 transition-colors hover:border-ink"
               >
                 <img
                   src={shop?.photos[0]}
                   alt=""
                   loading="lazy"
-                  className="size-14 shrink-0 rounded-xl object-cover"
+                  className="size-14 shrink-0 rounded-sm object-cover"
                 />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{shop?.name}</p>
-                  <p className="text-xs capitalize text-muted-foreground">{m.role}</p>
+                  <p className="text-sm capitalize text-muted-foreground">{m.role}</p>
                 </div>
                 <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
               </Link>

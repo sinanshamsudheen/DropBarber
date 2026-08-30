@@ -13,9 +13,15 @@ export const Route = createFileRoute("/bookings/")({
   head: () => ({
     meta: [
       { title: "Your bookings — Drop" },
-      { name: "description", content: "Upcoming and past barber appointments, all in one place." },
+      {
+        name: "description",
+        content: "Upcoming and past barber appointments, all in one place.",
+      },
       { property: "og:title", content: "Your bookings — Drop" },
-      { property: "og:description", content: "Track upcoming and past barber appointments." },
+      {
+        property: "og:description",
+        content: "Track upcoming and past barber appointments.",
+      },
     ],
   }),
   component: BookingsPage,
@@ -31,7 +37,7 @@ function BookingsPage() {
 
   return (
     <CustomerShell>
-      <div className="page">
+      <div className="page pb-16">
         <PageHeader title="Bookings" description="Your appointments across every shop you book." />
 
         {ready && !user && (
@@ -49,20 +55,28 @@ function BookingsPage() {
 
         {user && (
           <Tabs defaultValue="upcoming">
-            <TabsList className="w-full">
-              <TabsTrigger value="upcoming" className="flex-1">
-                Upcoming
-              </TabsTrigger>
-              <TabsTrigger value="past" className="flex-1">
-                Past
-              </TabsTrigger>
+            <TabsList>
+              <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+              <TabsTrigger value="past">Past</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="upcoming" className="space-y-3 pt-4">
-              {q.isPending && <ListSkeleton rows={2} />}
-              {q.isError && <ErrorState message={(q.error as Error).message} onRetry={() => void q.refetch()} />}
+            <TabsContent value="upcoming" className="grid gap-4 sm:grid-cols-2">
+              {q.isPending && (
+                <div className="sm:col-span-2">
+                  <ListSkeleton rows={2} />
+                </div>
+              )}
+              {q.isError && (
+                <div className="sm:col-span-2">
+                  <ErrorState
+                    message={(q.error as Error).message}
+                    onRetry={() => void q.refetch()}
+                  />
+                </div>
+              )}
               {q.data?.upcoming.length === 0 && (
                 <EmptyState
+                  className="sm:col-span-2"
                   icon={CalendarPlus}
                   title="You don't have any upcoming appointments."
                   description="Find a shop nearby and book your next cut."
@@ -78,10 +92,18 @@ function BookingsPage() {
               ))}
             </TabsContent>
 
-            <TabsContent value="past" className="space-y-3 pt-4">
-              {q.isPending && <ListSkeleton rows={2} />}
+            <TabsContent value="past" className="grid gap-4 sm:grid-cols-2">
+              {q.isPending && (
+                <div className="sm:col-span-2">
+                  <ListSkeleton rows={2} />
+                </div>
+              )}
               {q.data?.past.length === 0 && (
-                <EmptyState title="No past appointments yet" description="Completed visits will show up here." />
+                <EmptyState
+                  className="sm:col-span-2"
+                  title="No past appointments yet"
+                  description="Completed visits will show up here."
+                />
               )}
               {q.data?.past.map((a) => (
                 <AppointmentCard key={a.id} appointment={a} />

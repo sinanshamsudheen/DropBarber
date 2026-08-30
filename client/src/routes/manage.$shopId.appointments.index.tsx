@@ -5,7 +5,13 @@ import { DateStrip } from "@/components/booking/date-strip";
 import { StatusBadge } from "@/components/common/status-badge";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/common/states";
 import { ManageHeader } from "@/components/layout/manage-shell";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { listBarbers, listShopAppointments } from "@/lib/api";
 import { longDate, money, timeLabel, todayISO } from "@/lib/format";
 import type { AppointmentStatus } from "@/lib/types";
@@ -48,7 +54,10 @@ function AppointmentsPage() {
       search: { ...search, ...patch },
     });
 
-  const barbersQuery = useQuery({ queryKey: ["barbers", shopId], queryFn: () => listBarbers(shopId) });
+  const barbersQuery = useQuery({
+    queryKey: ["barbers", shopId],
+    queryFn: () => listBarbers(shopId),
+  });
   const q = useQuery({
     queryKey: ["shop-appointments", shopId, date],
     queryFn: () => listShopAppointments(shopId, date),
@@ -57,7 +66,9 @@ function AppointmentsPage() {
   const rows = (q.data ?? []).filter(
     (a) =>
       (!search.barberId || search.barberId === "all" || a.barberId === search.barberId) &&
-      (!search.status || search.status === "all" || a.status === (search.status as AppointmentStatus)),
+      (!search.status ||
+        search.status === "all" ||
+        a.status === (search.status as AppointmentStatus)),
   );
 
   return (
@@ -96,7 +107,9 @@ function AppointmentsPage() {
 
       <div className="mt-5">
         {q.isPending && <ListSkeleton rows={4} />}
-        {q.isError && <ErrorState message={(q.error as Error).message} onRetry={() => void q.refetch()} />}
+        {q.isError && (
+          <ErrorState message={(q.error as Error).message} onRetry={() => void q.refetch()} />
+        )}
         {q.isSuccess && rows.length === 0 && (
           <EmptyState
             icon={CalendarX}
@@ -110,7 +123,7 @@ function AppointmentsPage() {
               <Link
                 to="/manage/$shopId/appointments/$appointmentId"
                 params={{ shopId, appointmentId: a.id }}
-                className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-border bg-card p-3.5 transition-colors hover:border-accent/50"
+                className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-sm border border-hairline bg-card p-3.5 transition-colors hover:border-ink"
               >
                 <span className="w-16 shrink-0">
                   <span className="block text-sm font-semibold">{timeLabel(a.time)}</span>
@@ -118,8 +131,9 @@ function AppointmentsPage() {
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-medium">{a.customer.name}</span>
-                  <span className="block truncate text-xs text-muted-foreground">
-                    {a.service.name} · {a.barber.name} · {money(a.completion?.finalPrice ?? a.price)}
+                  <span className="block truncate text-sm text-muted-foreground">
+                    {a.service.name} · {a.barber.name} ·{" "}
+                    {money(a.completion?.finalPrice ?? a.price)}
                   </span>
                 </span>
                 <StatusBadge status={a.status} />

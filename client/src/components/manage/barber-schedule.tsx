@@ -21,7 +21,7 @@ export function BarberSchedule({
       {DAY_NAMES.map((dayName, day) => {
         const periods = schedule[day] ?? [];
         return (
-          <li key={dayName} className="rounded-2xl border border-border bg-card p-4">
+          <li key={dayName} className="rounded-md border border-hairline bg-card p-4">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
               <h3 className="truncate text-sm font-semibold">{dayName}</h3>
               <Button
@@ -37,7 +37,7 @@ export function BarberSchedule({
             </div>
 
             {periods.length === 0 ? (
-              <p className="mt-1 text-xs text-muted-foreground">Not working</p>
+              <p className="mt-1 text-sm text-muted-foreground">Not working</p>
             ) : (
               <ul className="mt-3 space-y-2">
                 {periods.map((period, index) => (
@@ -54,7 +54,7 @@ export function BarberSchedule({
                           ),
                         )
                       }
-                      className="h-11 min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm"
+                      className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm"
                     />
                     <span aria-hidden className="text-muted-foreground">
                       –
@@ -69,7 +69,7 @@ export function BarberSchedule({
                           periods.map((p, i) => (i === index ? { ...p, end: e.target.value } : p)),
                         )
                       }
-                      className="h-11 min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm"
+                      className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm"
                     />
                     <Button
                       type="button"

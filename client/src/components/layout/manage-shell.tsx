@@ -37,8 +37,18 @@ interface NavItem {
 }
 
 const ITEMS: NavItem[] = [
-  { to: "/manage/$shopId", label: "Today", icon: LayoutDashboard, primary: true },
-  { to: "/manage/$shopId/appointments", label: "Appointments", icon: CalendarRange, primary: true },
+  {
+    to: "/manage/$shopId",
+    label: "Today",
+    icon: LayoutDashboard,
+    primary: true,
+  },
+  {
+    to: "/manage/$shopId/appointments",
+    label: "Appointments",
+    icon: CalendarRange,
+    primary: true,
+  },
   {
     to: "/manage/$shopId/customers",
     label: "Customers",
@@ -46,15 +56,30 @@ const ITEMS: NavItem[] = [
     permission: "customers:view",
     primary: true,
   },
-  { to: "/manage/$shopId/barbers", label: "Barbers", icon: Scissors, permission: "barbers:manage" },
-  { to: "/manage/$shopId/services", label: "Services", icon: Store, permission: "services:manage" },
+  {
+    to: "/manage/$shopId/barbers",
+    label: "Barbers",
+    icon: Scissors,
+    permission: "barbers:manage",
+  },
+  {
+    to: "/manage/$shopId/services",
+    label: "Services",
+    icon: Store,
+    permission: "services:manage",
+  },
   {
     to: "/manage/$shopId/schedule",
     label: "Schedule",
     icon: CalendarRange,
     permission: "schedule:manage",
   },
-  { to: "/manage/$shopId/reviews", label: "Reviews", icon: Star, permission: "reviews:view" },
+  {
+    to: "/manage/$shopId/reviews",
+    label: "Reviews",
+    icon: Star,
+    permission: "reviews:view",
+  },
   { to: "/manage/$shopId/points", label: "Points", icon: Trophy },
   {
     to: "/manage/$shopId/settings",
@@ -87,21 +112,21 @@ export function ManageShell({ shopId, children }: { shopId: string; children: Re
   const overflow = items.filter((i) => !primary.includes(i));
 
   return (
-    <div className="min-h-screen bg-surface">
-      <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
-        <div className="page-wide grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-3">
+    <div className="min-h-screen bg-surface-soft">
+      <header className="sticky top-0 z-30 border-b border-hairline bg-background">
+        <div className="page-wide grid h-20 grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="min-w-0">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex min-w-0 items-center gap-2 rounded-lg px-1 py-1 text-left hover:bg-secondary">
-                  <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
-                    <Scissors className="size-4" aria-hidden />
+                <button className="flex min-w-0 items-center gap-3 rounded-full px-2 py-2 text-left transition-colors hover:bg-surface-soft">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-full bg-rausch text-white">
+                    <Scissors className="size-5" aria-hidden />
                   </span>
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold">
+                    <span className="type-title-md block truncate text-ink">
                       {shop?.name ?? "Shop"}
                     </span>
-                    <span className="block truncate text-xs capitalize text-muted-foreground">
+                    <span className="block truncate text-sm capitalize text-muted-foreground">
                       {membership?.role ?? "staff"} workspace
                     </span>
                   </span>
@@ -116,13 +141,16 @@ export function ManageShell({ shopId, children }: { shopId: string; children: Re
                   <DropdownMenuItem
                     key={m.shopId}
                     onClick={() =>
-                      navigate({ to: "/manage/$shopId", params: { shopId: m.shopId } })
+                      navigate({
+                        to: "/manage/$shopId",
+                        params: { shopId: m.shopId },
+                      })
                     }
                   >
                     <span className="flex-1 truncate">
                       {shops.find((s) => s.id === m.shopId)?.name}
                     </span>
-                    <span className="text-xs capitalize text-muted-foreground">{m.role}</span>
+                    <span className="text-sm capitalize text-muted-foreground">{m.role}</span>
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />
@@ -140,15 +168,20 @@ export function ManageShell({ shopId, children }: { shopId: string; children: Re
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+          <Button
+            asChild
+            variant="secondary"
+            size="sm"
+            className="hidden rounded-full sm:inline-flex"
+          >
             <Link to="/">Exit to marketplace</Link>
           </Button>
         </div>
       </header>
 
-      <div className="page-wide flex gap-6 py-4 md:py-6">
-        <aside className="hidden w-52 shrink-0 md:block">
-          <nav aria-label="Shop management" className="sticky top-20 space-y-1">
+      <div className="page-wide flex gap-10 py-8">
+        <aside className="hidden w-56 shrink-0 md:block">
+          <nav aria-label="Shop management" className="sticky top-28 space-y-1">
             {items.map((item) => {
               const active = isActive(pathname, item.to, shopId);
               return (
@@ -158,10 +191,10 @@ export function ManageShell({ shopId, children }: { shopId: string; children: Re
                   to={item.to as any}
                   params={{ shopId } as never}
                   className={cn(
-                    "flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                    "flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium transition-colors",
                     active
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
+                      ? "bg-ink text-white"
+                      : "text-muted-foreground hover:bg-surface-strong hover:text-ink",
                   )}
                 >
                   <item.icon className="size-4 shrink-0" aria-hidden />
@@ -171,12 +204,12 @@ export function ManageShell({ shopId, children }: { shopId: string; children: Re
             })}
           </nav>
         </aside>
-        <main className="min-w-0 flex-1 pb-24 md:pb-6">{children}</main>
+        <main className="min-w-0 flex-1 pb-24 md:pb-8">{children}</main>
       </div>
 
       <nav
         aria-label="Shop management"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-background pb-[env(safe-area-inset-bottom)] md:hidden"
       >
         <ul className="flex">
           {primary.map((item) => {
@@ -189,8 +222,8 @@ export function ManageShell({ shopId, children }: { shopId: string; children: Re
                   params={{ shopId } as never}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium",
-                    active ? "text-accent" : "text-muted-foreground",
+                    "flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-medium",
+                    active ? "text-rausch" : "text-muted-foreground",
                   )}
                 >
                   <item.icon className="size-5" aria-hidden />
@@ -201,7 +234,7 @@ export function ManageShell({ shopId, children }: { shopId: string; children: Re
           })}
           <li className="flex-1">
             <DropdownMenu>
-              <DropdownMenuTrigger className="flex min-h-14 w-full flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-muted-foreground">
+              <DropdownMenuTrigger className="flex min-h-14 w-full flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground">
                 <MoreHorizontal className="size-5" aria-hidden />
                 More
               </DropdownMenuTrigger>
@@ -250,7 +283,7 @@ export function RequirePermission({
         title="You don't have access to this section"
         description="Your role at this shop doesn't include this. Ask the owner if you need it."
         action={
-          <Button asChild variant="outline">
+          <Button asChild variant="secondary">
             <Link to="/manage/$shopId" params={{ shopId }}>
               Back to today
             </Link>
@@ -272,10 +305,10 @@ export function ManageHeader({
   action?: ReactNode;
 }) {
   return (
-    <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 pb-4">
+    <header className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 pb-6">
       <div className="min-w-0">
-        <h1 className="truncate text-xl font-semibold sm:text-2xl">{title}</h1>
-        {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
+        <h1 className="type-display-xl truncate text-ink">{title}</h1>
+        {description && <p className="mt-1 text-base text-muted-foreground">{description}</p>}
       </div>
       {action}
     </header>

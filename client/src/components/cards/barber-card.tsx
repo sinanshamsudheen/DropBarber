@@ -14,15 +14,18 @@ export const initials = (name: string) =>
 
 export function BarberAvatar({ barber, className }: { barber: Barber; className?: string }) {
   return (
-    <Avatar className={cn("size-12", className)}>
+    <Avatar className={cn("size-14", className)}>
       {barber.photo && <AvatarImage src={barber.photo} alt={barber.name} />}
-      <AvatarFallback className="bg-secondary font-display text-secondary-foreground">
-        {initials(barber.name)}
-      </AvatarFallback>
+      <AvatarFallback>{initials(barber.name)}</AvatarFallback>
     </Avatar>
   );
 }
 
+/*
+ * Selectable rows use an ink outline rather than a Rausch one — Rausch is
+ * reserved for CTAs and the save state, so selection reads as a 2px ink ring on
+ * a soft surface, matching the date-picker-day-selected treatment.
+ */
 export function BarberCard({
   barber,
   durationMin,
@@ -39,24 +42,24 @@ export function BarberCard({
   href?: React.ReactNode;
 }) {
   const body = (
-    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
+    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4">
       <BarberAvatar barber={barber} />
       <div className="min-w-0 text-left">
-        <p className="truncate text-sm font-semibold">{barber.name}</p>
-        <p className="line-clamp-1 text-xs text-muted-foreground">{barber.bio}</p>
-        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <p className="type-title-md truncate text-ink">{barber.name}</p>
+        <p className="line-clamp-1 text-sm text-muted-foreground">{barber.bio}</p>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
           <Rating value={barber.rating} count={barber.reviewCount} />
           {durationMin != null && (
-            <span className="text-xs font-medium text-muted-foreground">{duration(durationMin)}</span>
+            <span className="text-sm text-muted-foreground">{duration(durationMin)}</span>
           )}
-          {price != null && <span className="text-xs font-semibold">{money(price)}</span>}
+          {price != null && <span className="text-sm font-semibold text-ink">{money(price)}</span>}
         </div>
       </div>
       {onSelect && (
         <span
           className={cn(
             "grid size-6 shrink-0 place-items-center rounded-full border",
-            selected ? "border-accent bg-accent text-accent-foreground" : "border-border",
+            selected ? "border-ink bg-ink text-white" : "border-border-strong",
           )}
           aria-hidden
         >
@@ -74,13 +77,15 @@ export function BarberCard({
         onClick={onSelect}
         aria-pressed={selected}
         className={cn(
-          "w-full rounded-2xl border bg-card p-3.5 text-left transition-colors",
-          selected ? "border-accent ring-1 ring-accent" : "border-border hover:border-accent/50",
+          "w-full rounded-md border bg-card p-4 text-left transition-colors",
+          selected
+            ? "border-ink bg-surface-soft ring-1 ring-ink"
+            : "border-hairline hover:border-ink",
         )}
       >
         {body}
       </button>
     );
   }
-  return <div className="rounded-2xl border border-border bg-card p-3.5">{body}</div>;
+  return <div className="rounded-md border border-hairline bg-card p-4">{body}</div>;
 }

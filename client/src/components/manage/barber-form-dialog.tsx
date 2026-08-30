@@ -54,7 +54,9 @@ export function BarberFormDialog({
     onSuccess: (saved) => {
       toast.success(barber ? "Barber updated" : `${saved.name} added to the team`);
       void queryClient.invalidateQueries({ queryKey: ["barbers", shopId] });
-      void queryClient.invalidateQueries({ queryKey: ["managed-barber", shopId] });
+      void queryClient.invalidateQueries({
+        queryKey: ["managed-barber", shopId],
+      });
       onOpenChange(false);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -90,12 +92,12 @@ export function BarberFormDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Raj Menon"
-              className="mt-1.5 h-11"
+              className="mt-2"
               aria-invalid={!!error}
               aria-describedby={error ? "barber-name-error" : undefined}
             />
             {error && (
-              <p id="barber-name-error" role="alert" className="mt-1.5 text-xs text-destructive">
+              <p id="barber-name-error" role="alert" className="mt-1.5 text-sm text-destructive">
                 {error}
               </p>
             )}

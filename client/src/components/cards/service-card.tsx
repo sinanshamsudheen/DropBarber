@@ -17,23 +17,29 @@ export function ServiceCard({
   const Wrapper = onSelect ? "button" : "div";
   return (
     <Wrapper
-      {...(onSelect ? { type: "button" as const, onClick: onSelect, "aria-pressed": selected } : {})}
+      {...(onSelect
+        ? {
+            type: "button" as const,
+            onClick: onSelect,
+            "aria-pressed": selected,
+          }
+        : {})}
       className={cn(
-        "flex w-full items-center gap-3 rounded-2xl border bg-card p-4 text-left transition-colors",
-        selected ? "border-accent ring-1 ring-accent" : "border-border",
-        onSelect && "hover:border-accent/50",
+        "flex w-full items-center gap-4 rounded-md border bg-card p-5 text-left transition-colors",
+        selected ? "border-ink bg-surface-soft ring-1 ring-ink" : "border-hairline",
+        onSelect && !selected && "hover:border-ink",
       )}
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold">{service.name}</p>
-        <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{service.description}</p>
-        {durationHint && <p className="mt-1.5 text-xs font-medium text-accent">{durationHint}</p>}
+        <p className="type-title-md truncate text-ink">{service.name}</p>
+        <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">{service.description}</p>
+        {durationHint && <p className="mt-1.5 text-sm text-muted-foreground">{durationHint}</p>}
       </div>
-      <div className="flex shrink-0 items-center gap-2">
-        <span className="text-sm font-semibold">{money(service.price)}</span>
+      <div className="flex shrink-0 items-center gap-3">
+        <span className="text-base font-semibold text-ink">{money(service.price)}</span>
         {onSelect &&
           (selected ? (
-            <span className="grid size-6 place-items-center rounded-full bg-accent text-accent-foreground">
+            <span className="grid size-6 place-items-center rounded-full bg-ink text-white">
               <Check className="size-4" aria-hidden />
             </span>
           ) : (

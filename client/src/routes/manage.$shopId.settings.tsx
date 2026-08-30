@@ -31,7 +31,10 @@ function SettingsRoute() {
 function SettingsPage() {
   const { shopId } = Route.useParams();
   const queryClient = useQueryClient();
-  const q = useQuery({ queryKey: ["shop", shopId], queryFn: () => getShop(shopId) });
+  const q = useQuery({
+    queryKey: ["shop", shopId],
+    queryFn: () => getShop(shopId),
+  });
 
   const [name, setName] = useState("");
   const [tagline, setTagline] = useState("");
@@ -89,14 +92,14 @@ function SettingsPage() {
       <div className="space-y-6">
         <section>
           <h2 className="text-base font-semibold">Shop details</h2>
-          <div className="mt-3 space-y-3 rounded-2xl border border-border bg-card p-4">
+          <div className="mt-3 space-y-3 rounded-md border border-hairline bg-card p-4">
             <div>
               <Label htmlFor="shop-name">Name</Label>
               <Input
                 id="shop-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="mt-1.5 h-11"
+                className="mt-2"
               />
             </div>
             <div>
@@ -106,7 +109,7 @@ function SettingsPage() {
                 value={tagline}
                 onChange={(e) => setTagline(e.target.value)}
                 placeholder="One line customers see under your name"
-                className="mt-1.5 h-11"
+                className="mt-2"
               />
             </div>
             <div>
@@ -123,7 +126,7 @@ function SettingsPage() {
 
         <section>
           <h2 className="text-base font-semibold">Photos</h2>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             The first photo is used on discovery cards.
           </p>
           <div className="mt-3">
@@ -138,14 +141,14 @@ function SettingsPage() {
 
         <section>
           <h2 className="text-base font-semibold">Location &amp; contact</h2>
-          <div className="mt-3 space-y-3 rounded-2xl border border-border bg-card p-4">
+          <div className="mt-3 space-y-3 rounded-md border border-hairline bg-card p-4">
             <div>
               <Label htmlFor="shop-area">Neighbourhood</Label>
               <Input
                 id="shop-area"
                 value={area}
                 onChange={(e) => setArea(e.target.value)}
-                className="mt-1.5 h-11"
+                className="mt-2"
               />
             </div>
             <div>
@@ -154,7 +157,7 @@ function SettingsPage() {
                 id="shop-address"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                className="mt-1.5 h-11"
+                className="mt-2"
               />
             </div>
             <div>
@@ -164,10 +167,10 @@ function SettingsPage() {
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="mt-1.5 h-11"
+                className="mt-2"
               />
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Map coordinates come from your address once the backend geocodes it.
             </p>
           </div>
@@ -175,7 +178,7 @@ function SettingsPage() {
 
         <section>
           <h2 className="text-base font-semibold">Opening hours</h2>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             What customers see on your profile. Bookable slots still come from each barber's own
             hours.
           </p>
@@ -183,7 +186,7 @@ function SettingsPage() {
             {hours.map((h) => {
               const open = h.open !== null && h.close !== null;
               return (
-                <li key={h.day} className="rounded-2xl border border-border bg-card p-4">
+                <li key={h.day} className="rounded-md border border-hairline bg-card p-4">
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
                     <h3 className="truncate text-sm font-semibold">{DAY_NAMES[h.day]}</h3>
                     <Switch
@@ -204,7 +207,7 @@ function SettingsPage() {
                         value={h.open ?? ""}
                         aria-label={`${DAY_NAMES[h.day]} opening time`}
                         onChange={(e) => setDay(h.day, { open: e.target.value })}
-                        className="h-11 min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm"
+                        className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm"
                       />
                       <span aria-hidden className="text-muted-foreground">
                         –
@@ -214,11 +217,11 @@ function SettingsPage() {
                         value={h.close ?? ""}
                         aria-label={`${DAY_NAMES[h.day]} closing time`}
                         onChange={(e) => setDay(h.day, { close: e.target.value })}
-                        className="h-11 min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm"
+                        className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm"
                       />
                     </div>
                   ) : (
-                    <p className="mt-1 text-xs text-muted-foreground">Closed</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Closed</p>
                   )}
                 </li>
               );
@@ -248,7 +251,7 @@ function SettingsPage() {
 
         <Button
           size="lg"
-          className="h-12 w-full rounded-xl"
+          className="w-full"
           disabled={save.isPending || !name.trim()}
           onClick={() => save.mutate()}
         >
@@ -276,12 +279,12 @@ function SettingsLink({
     <Link
       to={to}
       params={{ shopId }}
-      className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-accent/50"
+      className="flex items-center gap-3 rounded-md border border-hairline bg-card p-4 transition-colors hover:border-ink"
     >
-      <Icon className="size-5 shrink-0 text-accent" aria-hidden />
+      <Icon className="size-5 shrink-0 text-ink" aria-hidden />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold">{title}</p>
-        <p className="truncate text-xs text-muted-foreground">{description}</p>
+        <p className="truncate text-sm text-muted-foreground">{description}</p>
       </div>
       <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
     </Link>

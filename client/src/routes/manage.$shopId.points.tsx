@@ -36,7 +36,7 @@ function PointsPage() {
         }
       />
 
-      <p className="mb-4 rounded-2xl border border-border bg-card px-4 py-3 text-xs text-muted-foreground">
+      <p className="mb-4 rounded-md border border-hairline bg-card px-4 py-3 text-sm text-muted-foreground">
         Completing the detailed record earns 10 points. Skipping it is always fine — the record is
         worth more to the shop than the points are to anyone.
       </p>
@@ -55,23 +55,21 @@ function PointsPage() {
 
       <ul className="space-y-3">
         {rows.map(({ barber, history }) => (
-          <li key={barber.id} className="rounded-2xl border border-border bg-card p-4">
+          <li key={barber.id} className="rounded-md border border-hairline bg-card p-4">
             <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
               <BarberAvatar barber={barber} className="size-11" />
               <p className="min-w-0 truncate text-sm font-semibold">{barber.name}</p>
-              <span className="shrink-0 text-sm font-semibold text-accent">
-                {barber.points} pts
-              </span>
+              <span className="shrink-0 text-sm font-semibold text-ink">{barber.points} pts</span>
             </div>
 
             {history.length === 0 ? (
-              <p className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">
+              <p className="mt-3 border-t border-hairline pt-3 text-sm text-muted-foreground">
                 No point history yet.
               </p>
             ) : (
-              <ul className="mt-3 space-y-1.5 border-t border-border pt-3">
+              <ul className="mt-3 space-y-1.5 border-t border-hairline pt-3">
                 {history.slice(0, 5).map((entry) => (
-                  <li key={entry.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 text-xs">
+                  <li key={entry.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 text-sm">
                     <span className="min-w-0 truncate text-muted-foreground">
                       {entry.reason} · {dayLabel(entry.date)}
                     </span>

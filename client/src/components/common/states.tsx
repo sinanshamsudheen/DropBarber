@@ -21,17 +21,19 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center rounded-2xl border border-dashed border-border bg-card/60 px-6 py-12 text-center",
+        "flex flex-col items-center rounded-md border border-dashed border-hairline bg-surface-soft px-6 py-16 text-center",
         className,
       )}
     >
       {Icon && (
-        <span className="mb-4 grid size-12 place-items-center rounded-full bg-secondary text-secondary-foreground">
+        <span className="mb-4 grid size-12 place-items-center rounded-full bg-surface-strong text-ink">
           <Icon className="size-5" aria-hidden />
         </span>
       )}
-      <h3 className="text-base font-semibold">{title}</h3>
-      {description && <p className="mt-1 max-w-sm text-sm text-muted-foreground">{description}</p>}
+      <h3 className="type-display-sm text-ink">{title}</h3>
+      {description && (
+        <p className="mt-2 max-w-sm text-base text-muted-foreground">{description}</p>
+      )}
       {action && <div className="mt-5">{action}</div>}
     </div>
   );
@@ -51,13 +53,16 @@ export function ErrorState({
   return (
     <div
       role="alert"
-      className={cn("rounded-2xl border border-destructive/25 bg-destructive/5 px-5 py-6 text-center", className)}
+      className={cn(
+        "rounded-md border border-destructive/25 bg-destructive/5 px-6 py-8 text-center",
+        className,
+      )}
     >
       <span className="mx-auto mb-3 grid size-11 place-items-center rounded-full bg-destructive/10 text-destructive">
         <AlertTriangle className="size-5" aria-hidden />
       </span>
-      <h3 className="text-base font-semibold">{title}</h3>
-      <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+      <h3 className="type-display-sm text-ink">{title}</h3>
+      <p className="mx-auto mt-2 max-w-sm text-base text-muted-foreground">
         {message ?? "We couldn't load this right now. Please try again."}
       </p>
       {onRetry && (
@@ -71,10 +76,13 @@ export function ErrorState({
 
 export function CardSkeleton({ lines = 3 }: { lines?: number }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <Skeleton className="mb-3 h-32 w-full rounded-xl" />
+    <div>
+      <Skeleton className="mb-3 aspect-square w-full rounded-md" />
       {Array.from({ length: lines }).map((_, i) => (
-        <Skeleton key={i} className={cn("mb-2 h-3.5", i === 0 ? "w-2/3" : i === 1 ? "w-1/2" : "w-1/3")} />
+        <Skeleton
+          key={i}
+          className={cn("mb-2 h-4", i === 0 ? "w-2/3" : i === 1 ? "w-1/2" : "w-1/3")}
+        />
       ))}
     </div>
   );
@@ -84,8 +92,11 @@ export function ListSkeleton({ rows = 3 }: { rows?: number }) {
   return (
     <div className="space-y-3" aria-busy="true" aria-live="polite">
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
-          <Skeleton className="size-12 shrink-0 rounded-full" />
+        <div
+          key={i}
+          className="flex items-center gap-4 rounded-md border border-hairline bg-card p-4"
+        >
+          <Skeleton className="size-14 shrink-0 rounded-full" />
           <div className="min-w-0 flex-1 space-y-2">
             <Skeleton className="h-3.5 w-1/2" />
             <Skeleton className="h-3 w-2/3" />
@@ -98,7 +109,11 @@ export function ListSkeleton({ rows = 3 }: { rows?: number }) {
 
 export function GridSkeleton({ cards = 3 }: { cards?: number }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2" aria-busy="true" aria-live="polite">
+    <div
+      className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      aria-busy="true"
+      aria-live="polite"
+    >
       {Array.from({ length: cards }).map((_, i) => (
         <CardSkeleton key={i} />
       ))}

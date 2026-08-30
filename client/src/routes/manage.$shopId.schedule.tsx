@@ -51,7 +51,10 @@ function SchedulePage() {
   const { membershipFor } = useSession();
   const ownBarberId = membershipFor(shopId)?.barberId;
 
-  const q = useQuery({ queryKey: ["barbers", shopId], queryFn: () => listBarbers(shopId) });
+  const q = useQuery({
+    queryKey: ["barbers", shopId],
+    queryFn: () => listBarbers(shopId),
+  });
 
   // A barber manages only their own hours; owners and managers pick anyone.
   const rows = (q.data ?? []).filter((r) => !ownBarberId || r.barber.id === ownBarberId);
@@ -71,7 +74,9 @@ function SchedulePage() {
     onSuccess: () => {
       toast.success("Working hours saved");
       void queryClient.invalidateQueries({ queryKey: ["barbers", shopId] });
-      void queryClient.invalidateQueries({ queryKey: ["managed-barber", shopId] });
+      void queryClient.invalidateQueries({
+        queryKey: ["managed-barber", shopId],
+      });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -120,7 +125,7 @@ function SchedulePage() {
             })
           }
         >
-          <SelectTrigger className="h-11" aria-label="Choose a barber">
+          <SelectTrigger aria-label="Choose a barber">
             <SelectValue placeholder="Choose a barber" />
           </SelectTrigger>
           <SelectContent>
@@ -141,7 +146,7 @@ function SchedulePage() {
         <div className="mt-5 space-y-6">
           <section>
             <h2 className="text-base font-semibold">Weekly hours for {barber.name}</h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p className="mt-0.5 text-sm text-muted-foreground">
               Add a second period on a day to leave a lunch break out of the booking grid.
             </p>
             <div className="mt-3">
@@ -153,7 +158,7 @@ function SchedulePage() {
               </p>
             )}
             <Button
-              className="mt-4 h-12 w-full rounded-xl sm:w-auto"
+              className="mt-4 w-full sm:w-auto"
               disabled={!!problem || saveHours.isPending}
               onClick={() => saveHours.mutate(draft)}
             >
@@ -163,11 +168,11 @@ function SchedulePage() {
 
           <section>
             <h2 className="text-base font-semibold">Time off</h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p className="mt-0.5 text-sm text-muted-foreground">
               Days off, leave or anything else that should stop bookings.
             </p>
 
-            <div className="mt-3 rounded-2xl border border-border bg-card p-4">
+            <div className="mt-3 rounded-md border border-hairline bg-card p-4">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <Label htmlFor="off-date">Date</Label>
@@ -177,7 +182,7 @@ function SchedulePage() {
                     min={todayISO()}
                     value={offDate}
                     onChange={(e) => setOffDate(e.target.value)}
-                    className="mt-1.5 h-11"
+                    className="mt-2"
                   />
                 </div>
                 <div>
@@ -187,7 +192,7 @@ function SchedulePage() {
                     value={offReason}
                     onChange={(e) => setOffReason(e.target.value)}
                     placeholder="e.g. Family wedding"
-                    className="mt-1.5 h-11"
+                    className="mt-2"
                   />
                 </div>
               </div>
@@ -213,11 +218,11 @@ function SchedulePage() {
                   .map((t) => (
                     <li
                       key={t.id}
-                      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-border bg-card p-3"
+                      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-sm border border-hairline bg-card p-3"
                     >
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{longDate(t.date)}</p>
-                        <p className="truncate text-xs text-muted-foreground">{t.reason}</p>
+                        <p className="truncate text-sm text-muted-foreground">{t.reason}</p>
                       </div>
                       <Button
                         size="icon"

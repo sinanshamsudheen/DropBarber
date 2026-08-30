@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, CalendarCheck, CalendarX, CheckCircle2, ImageIcon, Lock } from "lucide-react";
+import type { ReactNode } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { BarberCard } from "@/components/cards/barber-card";
@@ -10,6 +11,7 @@ import { TimeSlotPicker } from "@/components/booking/time-slot-picker";
 import { ReferencePhotoUploader } from "@/components/common/photo-uploader";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/common/states";
 import { CustomerShell } from "@/components/layout/customer-shell";
+import { Wordmark } from "@/components/layout/site-header";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -39,9 +41,15 @@ export const Route = createFileRoute("/shops/$shopId/book")({
   head: () => ({
     meta: [
       { title: "Book an appointment — Drop" },
-      { name: "description", content: "Pick a service, barber, date and an available time slot." },
+      {
+        name: "description",
+        content: "Pick a service, barber, date and an available time slot.",
+      },
       { property: "og:title", content: "Book an appointment — Drop" },
-      { property: "og:description", content: "Pick a service, barber, date and time in a few taps." },
+      {
+        property: "og:description",
+        content: "Pick a service, barber, date and time in a few taps.",
+      },
     ],
   }),
   component: BookingFlow,
@@ -60,22 +68,35 @@ function BookingFlow() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [confirmedId, setConfirmedId] = useState<string | null>(null);
 
-  const shopQuery = useQuery({ queryKey: ["shop", shopId], queryFn: () => getShop(shopId) });
+  const shopQuery = useQuery({
+    queryKey: ["shop", shopId],
+    queryFn: () => getShop(shopId),
+  });
 
   const step = confirmedId ? 6 : Math.min(Math.max(search.step, 1), 5);
   const setSearch = (patch: Partial<BookSearch>) =>
-    void navigate({ to: "/shops/$shopId/book", params: { shopId }, search: { ...search, ...patch } });
+    void navigate({
+      to: "/shops/$shopId/book",
+      params: { shopId },
+      search: { ...search, ...patch },
+    });
 
   const service = shopQuery.data?.services.find((s) => s.id === search.serviceId);
   const barber = shopQuery.data?.barbers.find((b) => b.id === search.barberId);
   const barberService = barber?.services.find((s) => s.serviceId === search.serviceId);
   const date = search.date ?? todayISO();
+  const price = barberService?.priceOverride ?? service?.price ?? 0;
 
   const availability = useQuery({
     queryKey: ["availability", shopId, search.barberId, search.serviceId, date],
     enabled: step >= 4 && !!search.barberId && !!search.serviceId,
     queryFn: () =>
-      getAvailability({ shopId, barberId: search.barberId!, serviceId: search.serviceId!, date }),
+      getAvailability({
+        shopId,
+        barberId: search.barberId!,
+        serviceId: search.serviceId!,
+        date,
+      }),
   });
 
   const booking = useMutation({
@@ -90,7 +111,9 @@ function BookingFlow() {
         referencePhotos: photos,
       }),
     onSuccess: (appointment) => {
-      void queryClient.invalidateQueries({ queryKey: ["customer-appointments"] });
+      void queryClient.invalidateQueries({
+        queryKey: ["customer-appointments"],
+      });
       setConfirmedId(appointment.id);
     },
     onError: (error: Error) => {
@@ -108,8 +131,8 @@ function BookingFlow() {
 
   if (shopQuery.isPending) {
     return (
-      <CustomerShell hideNav>
-        <div className="page pt-6">
+      <CustomerShell hideNav hideHeader hideFooter>
+        <div className="page-narrow pt-10">
           <ListSkeleton rows={4} />
         </div>
       </CustomerShell>
@@ -117,9 +140,12 @@ function BookingFlow() {
   }
   if (shopQuery.isError) {
     return (
-      <CustomerShell hideNav>
-        <div className="page pt-6">
-          <ErrorState message={(shopQuery.error as Error).message} onRetry={() => void shopQuery.refetch()} />
+      <CustomerShell hideNav hideHeader hideFooter>
+        <div className="page-narrow pt-10">
+          <ErrorState
+            message={(shopQuery.error as Error).message}
+            onRetry={() => void shopQuery.refetch()}
+          />
         </div>
       </CustomerShell>
     );
@@ -134,17 +160,17 @@ function BookingFlow() {
   /* ------------------------------------------------------------ confirmation */
   if (step === 6 && confirmedId) {
     return (
-      <CustomerShell hideNav>
-        <div className="page py-10 text-center">
-          <span className="mx-auto grid size-16 place-items-center rounded-full bg-success/12 text-success">
+      <CustomerShell hideNav hideHeader hideFooter>
+        <div className="page-form py-16">
+          <span className="mx-auto grid size-16 place-items-center rounded-full bg-surface-strong text-ink">
             <CheckCircle2 className="size-8" aria-hidden />
           </span>
-          <h1 className="mt-4 text-2xl font-semibold">Appointment booked</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1 className="type-display-xl mt-6 text-center text-ink">Appointment booked</h1>
+          <p className="mt-2 text-center text-base text-muted-foreground">
             We've sent the details to your bookings. The shop can see it right away.
           </p>
 
-          <div className="mt-6 space-y-2.5 rounded-2xl border border-border bg-card p-4 text-left">
+          <div className="mt-8 space-y-3 rounded-md border border-hairline bg-card p-6 shadow-float">
             <SummaryRow label="Shop" value={shop.name} />
             <SummaryRow label="Barber" value={barber?.name ?? ""} />
             <SummaryRow label="Service" value={service?.name ?? ""} />
@@ -155,21 +181,19 @@ function BookingFlow() {
               label="Reference photos"
               value={photos.length ? `${photos.length} attached` : "None attached"}
             />
-            <SummaryRow
-              label="Price"
-              value={money(barberService?.priceOverride ?? service?.price ?? 0)}
-              strong
-            />
+            <div className="border-t border-hairline pt-3">
+              <SummaryRow label="Pay at the shop" value={money(price)} strong />
+            </div>
           </div>
 
-          <div className="mt-6 space-y-2">
-            <Button asChild size="lg" className="h-12 w-full rounded-xl">
+          <div className="mt-8 space-y-3">
+            <Button asChild className="w-full">
               <Link to="/bookings/$appointmentId" params={{ appointmentId: confirmedId }}>
                 View booking
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="h-12 w-full rounded-xl">
-              <Link to="/">Back to discover</Link>
+            <Button asChild variant="secondary" className="w-full">
+              <Link to="/">Back to all shops</Link>
             </Button>
           </div>
         </div>
@@ -184,258 +208,296 @@ function BookingFlow() {
     (step === 4 && !!search.time) ||
     step === 5;
 
+  const cta =
+    step === 5 ? (
+      <Button
+        className="w-full"
+        disabled={!user || !search.time || booking.isPending}
+        onClick={() => booking.mutate()}
+      >
+        <CalendarCheck className="size-4" aria-hidden />
+        {booking.isPending ? "Booking…" : "Confirm booking"}
+      </Button>
+    ) : (
+      <Button
+        className="w-full"
+        disabled={!canContinue}
+        onClick={() =>
+          setSearch({
+            step: step + 1,
+            ...(step === 2 && !search.date ? { date } : {}),
+          })
+        }
+      >
+        Continue
+      </Button>
+    );
+
   return (
-    <CustomerShell hideNav className="pb-32">
-      <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
-        <div className="page py-3">
-          <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Back"
-              onClick={() =>
-                step === 1
-                  ? void navigate({ to: "/shops/$shopId", params: { shopId } })
-                  : setSearch({ step: step - 1 })
-              }
-            >
-              <ArrowLeft className="size-4" aria-hidden />
-            </Button>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">{shop.name}</p>
-              <p className="text-xs text-muted-foreground">
-                Step {step} of 5 · {STEPS[step - 1]}
-              </p>
-            </div>
+    <CustomerShell hideNav hideHeader hideFooter className="pb-32 lg:pb-0">
+      <header className="sticky top-0 z-40 border-b border-hairline bg-background">
+        <div className="page-narrow flex h-20 items-center gap-4">
+          <Button
+            variant="secondary"
+            size="icon-sm"
+            className="rounded-full"
+            aria-label="Back"
+            onClick={() =>
+              step === 1
+                ? void navigate({ to: "/shops/$shopId", params: { shopId } })
+                : setSearch({ step: step - 1 })
+            }
+          >
+            <ArrowLeft className="size-4" aria-hidden />
+          </Button>
+          <div className="min-w-0 flex-1">
+            <p className="type-title-md truncate text-ink">{shop.name}</p>
+            <p className="text-sm text-muted-foreground">
+              Step {step} of 5 · {STEPS[step - 1]}
+            </p>
           </div>
-          <Progress value={(step / 5) * 100} className="mt-2 h-1" />
+          <Wordmark className="hidden sm:inline-flex" />
         </div>
+        <Progress value={(step / 5) * 100} className="h-0.5 rounded-none" />
       </header>
 
-      <div className="page pt-5">
-        {step === 1 && (
-          <section aria-labelledby="s1">
-            <h1 id="s1" className="text-xl font-semibold">
-              What are you booking?
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Timings vary by barber — you'll see the exact duration next.
-            </p>
-            <div className="mt-4 space-y-3">
-              {activeServices.map((s) => (
-                <ServiceCard
-                  key={s.id}
-                  service={s}
-                  selected={search.serviceId === s.id}
-                  onSelect={() => setSearch({ serviceId: s.id, barberId: undefined, time: undefined })}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {step === 2 && (
-          <section aria-labelledby="s2">
-            <h1 id="s2" className="text-xl font-semibold">
-              Choose your barber
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Each barber takes a different amount of time for {service?.name.toLowerCase()}.
-            </p>
-            <div className="mt-4 space-y-3">
-              {eligibleBarbers.length === 0 && (
-                <EmptyState
-                  title="No barber offers this service right now"
-                  description="Pick a different service to continue."
-                  action={
-                    <Button variant="outline" onClick={() => setSearch({ step: 1 })}>
-                      Back to services
-                    </Button>
-                  }
-                />
-              )}
-              {eligibleBarbers.map((b) => {
-                const bs = b.services.find((s) => s.serviceId === search.serviceId)!;
-                return (
-                  <BarberCard
-                    key={b.id}
-                    barber={b}
-                    durationMin={bs.durationMin}
-                    price={bs.priceOverride ?? service?.price ?? null}
-                    selected={search.barberId === b.id}
-                    onSelect={() => setSearch({ barberId: b.id, time: undefined })}
+      <div className="page-narrow grid gap-x-16 gap-y-10 pb-16 pt-10 lg:grid-cols-[minmax(0,1fr)_372px]">
+        <div className="min-w-0">
+          {step === 1 && (
+            <Step
+              title="What are you booking?"
+              hint="Timings vary by barber — you'll see the exact duration next."
+            >
+              <div className="space-y-3">
+                {activeServices.map((s) => (
+                  <ServiceCard
+                    key={s.id}
+                    service={s}
+                    selected={search.serviceId === s.id}
+                    onSelect={() =>
+                      setSearch({
+                        serviceId: s.id,
+                        barberId: undefined,
+                        time: undefined,
+                      })
+                    }
                   />
-                );
-              })}
-            </div>
-          </section>
-        )}
+                ))}
+              </div>
+            </Step>
+          )}
 
-        {step === 3 && (
-          <section aria-labelledby="s3">
-            <h1 id="s3" className="text-xl font-semibold">
-              Pick a date
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {barber?.name} · {service?.name} · {duration(barberService?.durationMin ?? 0)}
-            </p>
-            <div className="mt-4">
-              <DateStrip value={search.date ?? ""} onChange={(d) => setSearch({ date: d, time: undefined })} />
-            </div>
-            {search.date && (
-              <p className="mt-4 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium">
-                {longDate(search.date)}
-              </p>
-            )}
-          </section>
-        )}
+          {step === 2 && (
+            <Step
+              title="Choose your barber"
+              hint={`Each barber takes a different amount of time for ${service?.name.toLowerCase() ?? "this service"}.`}
+            >
+              <div className="space-y-3">
+                {eligibleBarbers.length === 0 && (
+                  <EmptyState
+                    title="No barber offers this service right now"
+                    description="Pick a different service to continue."
+                    action={
+                      <Button variant="outline" onClick={() => setSearch({ step: 1 })}>
+                        Back to services
+                      </Button>
+                    }
+                  />
+                )}
+                {eligibleBarbers.map((b) => {
+                  const bs = b.services.find((s) => s.serviceId === search.serviceId)!;
+                  return (
+                    <BarberCard
+                      key={b.id}
+                      barber={b}
+                      durationMin={bs.durationMin}
+                      price={bs.priceOverride ?? service?.price ?? null}
+                      selected={search.barberId === b.id}
+                      onSelect={() => setSearch({ barberId: b.id, time: undefined })}
+                    />
+                  );
+                })}
+              </div>
+            </Step>
+          )}
 
-        {step === 4 && (
-          <section aria-labelledby="s4">
-            <h1 id="s4" className="text-xl font-semibold">
-              Available times
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {dayLabel(date)} · {barber?.name} · {duration(barberService?.durationMin ?? 0)}
-            </p>
-            <div className="mt-3">
-              <DateStrip value={date} onChange={(d) => setSearch({ date: d, time: undefined })} />
-            </div>
-            <div className="mt-5">
-              {availability.isError ? (
-                <ErrorState
-                  title="Couldn't load availability"
-                  message={(availability.error as Error).message}
-                  onRetry={() => void availability.refetch()}
-                />
-              ) : availability.isPending ? (
-                <TimeSlotPicker slots={[]} loading onChange={() => {}} />
-              ) : availability.data.slots.length === 0 ? (
-                <EmptyState
-                  icon={CalendarX}
-                  title="No available times for this barber and service on this date"
-                  description="Try another date, or go back and pick a different barber."
-                  action={
-                    <Button variant="outline" onClick={() => setSearch({ step: 2 })}>
-                      Change barber
-                    </Button>
-                  }
-                />
-              ) : (
-                <TimeSlotPicker
-                  slots={availability.data.slots}
-                  value={search.time}
-                  onChange={(t) => setSearch({ time: t })}
-                />
+          {step === 3 && (
+            <Step
+              title="Pick a date"
+              hint={`${barber?.name} · ${service?.name} · ${duration(barberService?.durationMin ?? 0)}`}
+            >
+              <DateStrip
+                value={search.date ?? ""}
+                onChange={(d) => setSearch({ date: d, time: undefined })}
+              />
+              {search.date && (
+                <p className="mt-6 rounded-md border border-hairline bg-surface-soft px-5 py-4 text-base font-medium text-ink">
+                  {longDate(search.date)}
+                </p>
               )}
-            </div>
-          </section>
-        )}
+            </Step>
+          )}
 
-        {step === 5 && (
-          <section aria-labelledby="s5">
-            <h1 id="s5" className="text-xl font-semibold">
-              Confirm your booking
-            </h1>
+          {step === 4 && (
+            <Step
+              title="Available times"
+              hint={`${dayLabel(date)} · ${barber?.name} · ${duration(barberService?.durationMin ?? 0)}`}
+            >
+              <DateStrip value={date} onChange={(d) => setSearch({ date: d, time: undefined })} />
+              <div className="mt-8">
+                {availability.isError ? (
+                  <ErrorState
+                    title="Couldn't load availability"
+                    message={(availability.error as Error).message}
+                    onRetry={() => void availability.refetch()}
+                  />
+                ) : availability.isPending ? (
+                  <TimeSlotPicker slots={[]} loading onChange={() => {}} />
+                ) : availability.data.slots.length === 0 ? (
+                  <EmptyState
+                    icon={CalendarX}
+                    title="No available times for this barber and service on this date"
+                    description="Try another date, or go back and pick a different barber."
+                    action={
+                      <Button variant="outline" onClick={() => setSearch({ step: 2 })}>
+                        Change barber
+                      </Button>
+                    }
+                  />
+                ) : (
+                  <TimeSlotPicker
+                    slots={availability.data.slots}
+                    value={search.time}
+                    onChange={(t) => setSearch({ time: t })}
+                  />
+                )}
+              </div>
+            </Step>
+          )}
 
-            <div className="mt-4 space-y-2.5 rounded-2xl border border-border bg-card p-4">
+          {step === 5 && (
+            <Step title="Confirm your booking">
+              <div className="space-y-8">
+                <div>
+                  <Label htmlFor="note">Add a note (optional)</Label>
+                  <Textarea
+                    id="note"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Anything your barber should know?"
+                    className="mt-2"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="size-4 text-ink" aria-hidden />
+                    <p className="type-title-md text-ink">Reference photo for this appointment</p>
+                  </div>
+                  <p className="mt-1.5 text-sm text-muted-foreground">
+                    Shared with this barber for this visit only. Saved style photos on your profile
+                    stay with you across shops — these don't.
+                  </p>
+                  <div className="mt-4">
+                    <ReferencePhotoUploader
+                      photos={photos}
+                      onChange={setPhotos}
+                      emptyHint="Optional, but barbers love a picture to work from."
+                    />
+                  </div>
+                </div>
+
+                {!user && (
+                  <div className="rounded-md border border-hairline bg-surface-soft p-6">
+                    <p className="type-title-md flex items-center gap-2 text-ink">
+                      <Lock className="size-4" aria-hidden /> Log in to finish
+                    </p>
+                    <p className="mt-1.5 text-sm text-muted-foreground">
+                      Your service, barber, date and time are saved — you'll come straight back
+                      here.
+                    </p>
+                    <Button asChild className="mt-5 w-full sm:w-auto">
+                      <Link
+                        to="/auth"
+                        search={{
+                          redirect: typeof window !== "undefined" ? window.location.href : "/",
+                        }}
+                      >
+                        Log in or sign up
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </Step>
+          )}
+        </div>
+
+        {/* The running reservation card — sticky right rail above 1024px. */}
+        <aside className="hidden lg:block">
+          <div className="sticky top-32 rounded-md border border-hairline bg-card p-6 shadow-float">
+            <p className="text-ink">
+              <span className="type-display-md">{money(price)}</span>{" "}
+              <span className="text-base text-muted-foreground">total</span>
+            </p>
+            <div className="mt-5 space-y-3 border-t border-hairline pt-5">
               <SummaryRow label="Shop" value={shop.name} />
-              <SummaryRow label="Barber" value={barber?.name ?? ""} />
-              <SummaryRow label="Service" value={service?.name ?? ""} />
-              <SummaryRow label="Date" value={longDate(date)} />
-              <SummaryRow label="Time" value={search.time ? timeLabel(search.time) : "—"} />
-              <SummaryRow label="Duration" value={duration(barberService?.durationMin ?? 0)} />
+              <SummaryRow label="Service" value={service?.name ?? "Not picked yet"} />
+              <SummaryRow label="Barber" value={barber?.name ?? "Not picked yet"} />
               <SummaryRow
-                label="Price"
-                value={money(barberService?.priceOverride ?? service?.price ?? 0)}
-                strong
+                label="Date"
+                value={search.date ? longDate(search.date) : "Not picked yet"}
+              />
+              <SummaryRow
+                label="Time"
+                value={search.time ? timeLabel(search.time) : "Not picked yet"}
+              />
+              <SummaryRow
+                label="Duration"
+                value={barberService ? duration(barberService.durationMin) : "—"}
               />
             </div>
-
-            <div className="mt-5">
-              <Label htmlFor="note">Add a note (optional)</Label>
-              <Textarea
-                id="note"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Anything your barber should know?"
-                className="mt-1.5 min-h-20"
-              />
-            </div>
-
-            <div className="mt-5">
-              <div className="flex items-center gap-2">
-                <ImageIcon className="size-4 text-accent" aria-hidden />
-                <p className="text-sm font-semibold">Reference photo for this appointment</p>
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Shared with this barber for this visit only. Saved style photos on your profile stay with you
-                across shops — these don't.
-              </p>
-              <div className="mt-3">
-                <ReferencePhotoUploader
-                  photos={photos}
-                  onChange={setPhotos}
-                  emptyHint="Optional, but barbers love a picture to work from."
-                />
-              </div>
-            </div>
-
-            {!user && (
-              <div className="mt-5 rounded-2xl border border-accent/30 bg-accent/8 p-4">
-                <p className="flex items-center gap-2 text-sm font-semibold">
-                  <Lock className="size-4" aria-hidden /> Log in to finish
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Your service, barber, date and time are saved — you'll come straight back here.
-                </p>
-                <Button asChild className="mt-3 h-11 w-full rounded-xl">
-                  <Link
-                    to="/auth"
-                    search={{ redirect: typeof window !== "undefined" ? window.location.href : "/" }}
-                  >
-                    Log in or sign up
-                  </Link>
-                </Button>
-              </div>
-            )}
-          </section>
-        )}
+            <div className="mt-6">{cta}</div>
+            <p className="mt-3 text-center text-sm text-muted-foreground">
+              You won't be charged yet
+            </p>
+          </div>
+        </aside>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur">
-        <div className="mx-auto flex max-w-2xl items-center gap-3">
-          {step === 5 ? (
-            <Button
-              size="lg"
-              className="h-12 w-full rounded-xl"
-              disabled={!user || !search.time || booking.isPending}
-              onClick={() => booking.mutate()}
-            >
-              <CalendarCheck className="size-4" aria-hidden />
-              {booking.isPending ? "Booking…" : "Confirm booking"}
-            </Button>
-          ) : (
-            <Button
-              size="lg"
-              className="h-12 w-full rounded-xl"
-              disabled={!canContinue}
-              onClick={() => setSearch({ step: step + 1, ...(step === 2 && !search.date ? { date } : {}) })}
-            >
-              Continue
-            </Button>
-          )}
+      {/* Below the rail breakpoint the card collapses to a sticky bottom bar. */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-hairline bg-background px-6 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:hidden">
+        <div className="mx-auto flex max-w-2xl items-center gap-4">
+          <div className="hidden min-w-0 flex-1 sm:block">
+            <p className="truncate text-base font-semibold text-ink">{money(price)}</p>
+            <p className="truncate text-sm text-muted-foreground">
+              {service?.name ?? "Pick a service"}
+            </p>
+          </div>
+          <div className="flex-1">{cta}</div>
         </div>
       </div>
     </CustomerShell>
   );
 }
 
+function Step({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
+  return (
+    <section>
+      <h1 className="type-display-md text-ink">{title}</h1>
+      {hint && <p className="mt-1.5 text-base text-muted-foreground">{hint}</p>}
+      <div className="mt-6">{children}</div>
+    </section>
+  );
+}
+
 function SummaryRow({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
     <div className="flex items-start justify-between gap-4 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className={strong ? "text-right font-semibold" : "text-right font-medium"}>{value}</span>
+      <span className="shrink-0 text-muted-foreground">{label}</span>
+      <span className={strong ? "text-right font-semibold text-ink" : "text-right text-ink"}>
+        {value}
+      </span>
     </div>
   );
 }

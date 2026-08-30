@@ -43,7 +43,9 @@ export function ReviewDialog({
         text: text.trim(),
       }),
     onSuccess: () => {
-      toast.success("Thanks for the review", { description: "It's now visible on the shop's profile." });
+      toast.success("Thanks for the review", {
+        description: "It's now visible on the shop's profile.",
+      });
       void queryClient.invalidateQueries();
       setOpen(false);
     },
@@ -55,25 +57,25 @@ export function ReviewDialog({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Review your visit</DialogTitle>
+          <DialogTitle className="type-display-sm">Review your visit</DialogTitle>
           <DialogDescription>
             Reviews are tied to a real completed appointment at {shopName}.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-5">
           <div>
-            <Label>How was the shop?</Label>
+            <Label className="mb-1 block">How was the shop?</Label>
             <StarInput value={shopRating} onChange={setShopRating} label="Shop rating" />
           </div>
           <div>
-            <Label>How was {barberName}? (optional)</Label>
+            <Label className="mb-1 block">How was {barberName}? (optional)</Label>
             <StarInput value={barberRating} onChange={setBarberRating} label="Barber rating" />
           </div>
           <div>
             <Label htmlFor="review-text">Your review</Label>
             <Textarea
               id="review-text"
-              className="mt-1.5 min-h-24"
+              className="mt-2"
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="What stood out?"
@@ -87,7 +89,7 @@ export function ReviewDialog({
         </div>
         <DialogFooter>
           <Button
-            className="h-11 w-full"
+            className="w-full"
             disabled={!shopRating || mutation.isPending}
             onClick={() => {
               setError(null);

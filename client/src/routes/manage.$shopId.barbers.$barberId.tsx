@@ -70,12 +70,12 @@ function BarberDetail() {
         onOpenChange={setEditOpen}
       />
 
-      <section className="flex items-start gap-4 rounded-2xl border border-border bg-card p-4">
+      <section className="flex items-start gap-4 rounded-md border border-hairline bg-card p-4">
         <BarberAvatar barber={barber} className="size-16" />
         <div className="min-w-0 flex-1">
           <Rating value={barber.rating} count={barber.reviewCount} size="md" />
           <p className="mt-1.5 text-sm text-muted-foreground">{barber.bio || "No bio yet."}</p>
-          <p className="mt-2 text-xs font-medium text-accent">{barber.points} points</p>
+          <p className="mt-2 text-sm font-medium text-ink">{barber.points} points</p>
         </div>
       </section>
 
@@ -83,7 +83,7 @@ function BarberDetail() {
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="min-w-0">
             <h2 className="text-base font-semibold">Services &amp; durations</h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p className="mt-0.5 text-sm text-muted-foreground">
               Duration is per barber — {barber.name} may be quicker or slower than the rest of the
               team, and availability is calculated from this number.
             </p>
@@ -120,7 +120,11 @@ function ServiceRow({
   shopId: string;
   barberId: string;
   service: Service;
-  assigned: { durationMin: number; priceOverride?: number | undefined; active: boolean } | null;
+  assigned: {
+    durationMin: number;
+    priceOverride?: number | undefined;
+    active: boolean;
+  } | null;
 }) {
   const queryClient = useQueryClient();
   const [durationInput, setDurationInput] = useState(String(assigned?.durationMin ?? 20));
@@ -130,10 +134,16 @@ function ServiceRow({
 
   const patch = useMutation({
     mutationFn: (
-      next: Partial<{ durationMin: number; priceOverride: number | undefined; active: boolean }>,
+      next: Partial<{
+        durationMin: number;
+        priceOverride: number | undefined;
+        active: boolean;
+      }>,
     ) => setBarberService(barberId, service.id, next),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["managed-barber", shopId, barberId] });
+      void queryClient.invalidateQueries({
+        queryKey: ["managed-barber", shopId, barberId],
+      });
       void queryClient.invalidateQueries({ queryKey: ["barbers", shopId] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -162,11 +172,11 @@ function ServiceRow({
   };
 
   return (
-    <li className="rounded-2xl border border-border bg-card p-4">
+    <li className="rounded-md border border-hairline bg-card p-4">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">{service.name}</p>
-          <p className="truncate text-xs text-muted-foreground">
+          <p className="truncate text-sm text-muted-foreground">
             Shop price {money(service.price)}
           </p>
         </div>
@@ -183,9 +193,9 @@ function ServiceRow({
       </div>
 
       {active && (
-        <div className="mt-3 grid grid-cols-2 gap-3 border-t border-border pt-3">
+        <div className="mt-3 grid grid-cols-2 gap-3 border-t border-hairline pt-3">
           <div>
-            <label htmlFor={durationId} className="text-xs font-medium text-muted-foreground">
+            <label htmlFor={durationId} className="text-sm font-medium text-muted-foreground">
               Minutes for this barber
             </label>
             <div className="relative mt-1.5">
@@ -199,12 +209,12 @@ function ServiceRow({
                 value={durationInput}
                 onChange={(e) => setDurationInput(e.target.value.replace(/[^\d]/g, ""))}
                 onBlur={commitDuration}
-                className="h-11 pl-9"
+                className="pl-9"
               />
             </div>
           </div>
           <div>
-            <label htmlFor={priceId} className="text-xs font-medium text-muted-foreground">
+            <label htmlFor={priceId} className="text-sm font-medium text-muted-foreground">
               Price override (₹)
             </label>
             <Input
@@ -214,7 +224,7 @@ function ServiceRow({
               placeholder={String(service.price)}
               onChange={(e) => setPriceInput(e.target.value.replace(/[^\d]/g, ""))}
               onBlur={commitPrice}
-              className="mt-1.5 h-11"
+              className="mt-2"
             />
           </div>
         </div>

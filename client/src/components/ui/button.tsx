@@ -4,24 +4,45 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
+/*
+ * DESIGN.md buttons: 8px radius, weight 500, 48px tall for primary CTAs.
+ * `default` is the Rausch CTA — the single brand voltage. Press state flips to
+ * rausch-active with no transform and no shadow change; disabled is the pale
+ * Rausch tint. `secondary` is white with a 1px ink outline; `ghost`/`link` are
+ * the tertiary text treatments (underline on hover, no surface).
+ */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm font-medium cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+        default:
+          "bg-rausch text-white active:bg-rausch-active hover:bg-rausch-active disabled:bg-rausch-disabled disabled:text-white",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50",
         outline:
-          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "border border-ink bg-background text-ink hover:bg-surface-soft disabled:border-border-strong disabled:text-muted-soft",
+        secondary:
+          "border border-hairline bg-background text-ink hover:bg-surface-soft disabled:text-muted-soft",
+        ghost: "text-ink hover:bg-surface-soft disabled:text-muted-soft",
+        link: "text-ink underline-offset-4 hover:underline disabled:text-muted-soft",
+        /* Pill CTA used on featured cells and the category strip. */
+        pill: "rounded-full bg-rausch text-white hover:bg-rausch-active disabled:bg-rausch-disabled",
+        /* The circular Rausch orb terminating the search bar. */
+        orb: "rounded-full bg-rausch text-white hover:bg-rausch-active disabled:bg-rausch-disabled",
       },
       size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-10 rounded-md px-8",
-        icon: "h-9 w-9",
+        default: "h-12 px-6 text-base [&_svg]:size-4",
+        sm: "h-10 px-4 text-sm [&_svg]:size-4",
+        xs: "h-8 px-3 text-sm [&_svg]:size-3.5",
+        lg: "h-14 px-8 text-base [&_svg]:size-5",
+        icon: "size-12 [&_svg]:size-5",
+        "icon-sm": "size-10 [&_svg]:size-4",
+        "icon-xs": "size-8 [&_svg]:size-4",
+        /* DESIGN.md button-pill-rausch: 10x20 padding, 14px label. */
+        pill: "h-auto px-5 py-2.5 text-sm [&_svg]:size-4",
+        /* DESIGN.md search-orb: 48x48. */
+        orb: "size-12 [&_svg]:size-5",
       },
     },
     defaultVariants: {

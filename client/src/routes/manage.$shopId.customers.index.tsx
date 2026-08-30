@@ -28,19 +28,24 @@ function CustomersPage() {
       />
 
       <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+        <Search
+          className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+          aria-hidden
+        />
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search name, phone or email"
-          className="h-11 pl-9"
+          className="pl-9"
           aria-label="Search customers"
         />
       </div>
 
       <div className="mt-4">
         {q.isPending && <ListSkeleton rows={4} />}
-        {q.isError && <ErrorState message={(q.error as Error).message} onRetry={() => void q.refetch()} />}
+        {q.isError && (
+          <ErrorState message={(q.error as Error).message} onRetry={() => void q.refetch()} />
+        )}
         {q.isSuccess && q.data.length === 0 && (
           <EmptyState
             icon={Users}
