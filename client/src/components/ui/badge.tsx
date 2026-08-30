@@ -13,7 +13,7 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-transparent bg-amber text-on-amber type-badge px-2.5 py-1",
+        default: "border-transparent bg-brand text-on-brand type-badge px-2.5 py-1",
         secondary: "border-transparent bg-surface-strong text-ink type-badge px-2.5 py-1",
         outline: "border-hairline bg-background text-ink type-badge px-2.5 py-1",
         destructive:

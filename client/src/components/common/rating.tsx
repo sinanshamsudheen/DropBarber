@@ -103,7 +103,7 @@ export function StarInput({
           <Star
             className={cn(
               "size-7 transition-colors",
-              star <= value ? "fill-amber text-amber" : "text-border-strong",
+              star <= value ? "fill-brand text-brand" : "text-border-strong",
             )}
             aria-hidden
           />

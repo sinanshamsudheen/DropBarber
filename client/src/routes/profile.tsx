@@ -121,7 +121,7 @@ function ProfilePage() {
                 to="/manage"
                 className="flex items-center gap-4 rounded-md border border-hairline bg-surface-soft p-5 transition-shadow hover:shadow-float"
               >
-                <Store className="size-5 shrink-0 text-ink" aria-hidden />
+                <Store className="size-5 shrink-0 text-brand" aria-hidden />
                 <div className="min-w-0 flex-1">
                   <p className="type-title-md text-ink">Shop workspace</p>
                   <p className="text-sm text-muted-foreground">

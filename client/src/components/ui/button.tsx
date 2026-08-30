@@ -6,11 +6,12 @@ import { cn } from "@/lib/utils";
 
 /*
  * DESIGN.md buttons: 8px radius, weight 500, 48px tall for primary CTAs.
- * `default` is the amber CTA — the single brand voltage. The label is espresso
- * (`on-amber`), never white: white on amber is 1.86:1. Press flips to
- * amber-active with no transform and no shadow change; disabled is the pale
- * amber tint. `secondary` is white with a 1px ink outline; `ghost`/`link` are
- * the tertiary text treatments (underline on hover, no surface).
+ * `default` is the brand CTA — the single accent voltage. A dark teal fill
+ * carrying a white label (`on-brand`, 6.44:1); the dark-fill/light-label
+ * direction is what keeps a CTA from reading like a discount sticker. Press
+ * flips to brand-active with no transform and no shadow change; disabled drops
+ * to a neutral tint. `secondary` is white with a 1px ink outline; `ghost`/`link`
+ * are the tertiary text treatments (underline on hover, no surface).
  */
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm font-medium cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:shrink-0",
@@ -18,7 +19,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-amber text-on-amber active:bg-amber-active hover:bg-amber-active disabled:bg-amber-disabled disabled:text-muted-soft",
+          "bg-brand text-on-brand active:bg-brand-active hover:bg-brand-active disabled:bg-brand-disabled disabled:text-muted-soft",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50",
         outline:
@@ -28,9 +29,9 @@ const buttonVariants = cva(
         ghost: "text-ink hover:bg-surface-soft disabled:text-muted-soft",
         link: "text-ink underline-offset-4 hover:underline disabled:text-muted-soft",
         /* Pill CTA used on featured cells and the category strip. */
-        pill: "rounded-full bg-amber text-on-amber hover:bg-amber-active disabled:bg-amber-disabled disabled:text-muted-soft",
+        pill: "rounded-full bg-brand text-on-brand hover:bg-brand-active disabled:bg-brand-disabled disabled:text-muted-soft",
         /* The circular Rausch orb terminating the search bar. */
-        orb: "rounded-full bg-amber text-on-amber hover:bg-amber-active disabled:bg-amber-disabled disabled:text-muted-soft",
+        orb: "rounded-full bg-brand text-on-brand hover:bg-brand-active disabled:bg-brand-disabled disabled:text-muted-soft",
       },
       size: {
         default: "h-12 px-6 text-base [&_svg]:size-4",

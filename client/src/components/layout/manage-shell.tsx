@@ -119,7 +119,7 @@ export function ManageShell({ shopId, children }: { shopId: string; children: Re
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex min-w-0 items-center gap-3 rounded-full px-2 py-2 text-left transition-colors hover:bg-surface-soft">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-full bg-amber text-on-amber">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-on-brand">
                     <Scissors className="size-5" aria-hidden />
                   </span>
                   <span className="min-w-0">
@@ -223,7 +223,7 @@ export function ManageShell({ shopId, children }: { shopId: string; children: Re
                   aria-current={active ? "page" : undefined}
                   className={cn(
                     "flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-medium",
-                    active ? "text-ink" : "text-muted-foreground",
+                    active ? "text-brand" : "text-muted-foreground",
                   )}
                 >
                   <item.icon className="size-5" aria-hidden />
