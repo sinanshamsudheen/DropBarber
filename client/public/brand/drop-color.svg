@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="55.5 53.5 151 151">
   <title>Drop</title>
-  <path fill="#2B1D14" d="M136 54 A74 74 0 0 0 124 202 Z"/>
-  <path fill="#2B1D14" d="M152 54 L168 54 L162 204 L157 204 Z"/>
-  <circle fill="#F0B429" cx="190" cy="188" r="16"/>
+  <path fill="#27241D" d="M136 54 A74 74 0 0 0 124 202 Z"/>
+  <path fill="#27241D" d="M152 54 L168 54 L162 204 L157 204 Z"/>
+  <circle fill="#0C6B58" cx="190" cy="188" r="16"/>
 </svg>
