@@ -67,6 +67,8 @@ No migrations exist yet — `alembic/versions/` is intentionally empty until the
 uv run pytest
 ```
 
+Covers only the foundation: app startup, `/health` + `/health/ready`, the JWT auth dependency's accept/reject behavior, and config loading/validation. `/health/ready` is asserted to return a well-formed envelope with status `200` or `503` — a real Postgres instance is not assumed to be running.
+
 ## Lint & type check
 
 ```sh
@@ -75,7 +77,11 @@ uv run ruff format .      # format
 uv run ty check           # static type check
 ```
 
-Covers only the foundation: app startup, `/health` + `/health/ready`, the JWT auth dependency's accept/reject behavior, and config loading/validation. `/health/ready` is asserted to return a well-formed envelope with status `200` or `503` — a real Postgres instance is not assumed to be running.
+A [pre-commit](https://pre-commit.com) hook (`../.pre-commit-config.yaml`, repo root) runs all three (as `ruff check`, `ruff format --check`, `ty check`) against `server/` before every commit that touches it. Install it once per clone:
+
+```sh
+pre-commit install   # run from the repo root
+```
 
 ## How authentication works
 

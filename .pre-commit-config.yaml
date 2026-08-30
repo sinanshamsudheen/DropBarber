@@ -1,0 +1,23 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check (server)
+        entry: uv run --directory server ruff check .
+        language: system
+        files: ^server/
+        pass_filenames: false
+
+      - id: ruff-format
+        name: ruff format check (server)
+        entry: uv run --directory server ruff format --check .
+        language: system
+        files: ^server/
+        pass_filenames: false
+
+      - id: ty-check
+        name: ty check (server)
+        entry: uv run --directory server ty check
+        language: system
+        files: ^server/
+        pass_filenames: false
