@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 151">
+  <title>Drop</title>
+  <g transform="translate(-55.5,-53.5)">
+    <path fill="#27241D" d="M136 54 A74 74 0 0 0 124 202 Z"/>
+    <path fill="#27241D" d="M152 54 L168 54 L162 204 L157 204 Z"/>
+    <circle fill="#0C6B58" cx="190" cy="188" r="16"/>
+  </g>
+  <text x="185" y="75.5" dominant-baseline="central" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-weight="700" font-size="118" letter-spacing="-3" fill="#27241D">drop</text>
+</svg>
