@@ -351,7 +351,7 @@
 
 /* Forms and single-column reading columns. */
 @utility page-form {
-  @apply mx-auto w-full max-w-[560px] px-6;
+  @apply mx-auto w-full max-w-[560px] px-6 sm:px-10;
 }
 
 @utility hairline {

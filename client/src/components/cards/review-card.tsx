@@ -10,7 +10,7 @@ export function ReviewCard({
   barberName?: string | undefined;
 }) {
   return (
-    <article className="rounded-md border border-hairline bg-card p-6">
+    <article className="rounded-md border border-hairline bg-card p-4 sm:p-5 md:p-6">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
         <div className="min-w-0">
           <p className="type-title-md truncate text-ink">{review.customerName}</p>

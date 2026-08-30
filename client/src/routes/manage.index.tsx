@@ -28,7 +28,7 @@ function ShopSelector() {
 
   if (user.memberships.length === 0) {
     return (
-      <div className="page py-10">
+      <div className="page py-8 sm:py-10">
         <EmptyState
           icon={Scissors}
           title="You're not part of a shop yet"
@@ -48,7 +48,7 @@ function ShopSelector() {
   }
 
   return (
-    <div className="page py-8">
+    <div className="page py-8 sm:py-10">
       <h1 className="text-2xl font-semibold">Choose a shop</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         You manage {user.memberships.length} shops.
@@ -61,7 +61,7 @@ function ShopSelector() {
               <Link
                 to="/manage/$shopId"
                 params={{ shopId: m.shopId }}
-                className="flex items-center gap-3 rounded-md border border-hairline bg-card p-4 transition-colors hover:border-ink"
+                className="flex items-center gap-3 rounded-md border border-hairline bg-card p-4 transition-colors hover:border-ink sm:p-5"
               >
                 <img
                   src={shop?.photos[0]}

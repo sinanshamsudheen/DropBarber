@@ -60,7 +60,7 @@ function AppointmentDetail() {
   if (q.isPending) {
     return (
       <CustomerShell>
-        <div className="page-narrow pt-10">
+        <div className="page-narrow pt-8 sm:pt-10">
           <ListSkeleton rows={3} />
         </div>
       </CustomerShell>
@@ -69,7 +69,7 @@ function AppointmentDetail() {
   if (q.isError) {
     return (
       <CustomerShell>
-        <div className="page-narrow pt-10">
+        <div className="page-narrow pt-8 sm:pt-10">
           <ErrorState message={(q.error as Error).message} onRetry={() => void q.refetch()} />
         </div>
       </CustomerShell>
@@ -82,7 +82,7 @@ function AppointmentDetail() {
 
   return (
     <CustomerShell>
-      <div className="page-narrow pb-16 pt-6">
+      <div className="page-narrow pb-12 pt-6 sm:pb-16">
         <Button
           variant="ghost"
           size="sm"
@@ -102,7 +102,7 @@ function AppointmentDetail() {
           <StatusBadge status={a.status} />
         </div>
 
-        <div className="mt-6 space-y-3 rounded-md border border-hairline bg-card p-6">
+        <div className="mt-6 space-y-3 rounded-md border border-hairline bg-card p-4 sm:p-5 md:p-6">
           <Row
             icon={CalendarClock}
             label="When"
@@ -114,16 +114,16 @@ function AppointmentDetail() {
         </div>
 
         {a.note && (
-          <section className="mt-10">
+          <section className="mt-6 sm:mt-10">
             <h2 className="type-display-md text-ink">Your note</h2>
-            <p className="mt-4 rounded-md border border-hairline bg-card p-6 text-base text-body">
+            <p className="mt-4 rounded-md border border-hairline bg-card p-4 text-base text-body sm:p-5 md:p-6">
               {a.note}
             </p>
           </section>
         )}
 
         {a.referencePhotos.length > 0 && (
-          <section className="mt-10">
+          <section className="mt-6 sm:mt-10">
             <h2 className="type-display-md text-ink">Reference photos</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Shared with {a.barber.name} for this appointment.
@@ -143,7 +143,7 @@ function AppointmentDetail() {
         )}
 
         {a.completion && (
-          <section className="mt-10 rounded-md border border-hairline bg-surface-soft p-6">
+          <section className="mt-6 rounded-md border border-hairline bg-surface-soft p-4 sm:mt-10 sm:p-5 md:p-6">
             <h2 className="type-display-md text-ink">What was done</h2>
             <dl className="mt-4 space-y-2 text-base">
               <div className="flex justify-between gap-4">
@@ -171,7 +171,7 @@ function AppointmentDetail() {
           </section>
         )}
 
-        <div className="mt-10 flex flex-col gap-3 border-t border-hairline pt-8 sm:flex-row sm:flex-wrap">
+        <div className="mt-6 flex flex-col gap-3 border-t border-hairline pt-6 sm:mt-10 sm:flex-row sm:flex-wrap sm:pt-8">
           {canReview && (
             <ReviewDialog
               appointmentId={a.id}

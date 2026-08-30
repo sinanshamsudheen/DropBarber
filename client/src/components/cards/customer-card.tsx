@@ -20,7 +20,7 @@ export function CustomerCard({ shopId, row }: { shopId: string; row: ShopCustome
     <Link
       to="/manage/$shopId/customers/$customerId"
       params={{ shopId, customerId: customer.id }}
-      className="flex items-center gap-4 rounded-md border border-hairline bg-card p-4 transition-colors hover:border-ink"
+      className="flex items-center gap-4 rounded-md border border-hairline bg-card p-4 transition-colors hover:border-ink sm:p-5"
     >
       <Avatar className="size-11 shrink-0">
         {customer.photo && <AvatarImage src={customer.photo} alt="" />}

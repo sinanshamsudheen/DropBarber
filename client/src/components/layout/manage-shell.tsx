@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { EmptyState } from "@/components/common/states";
+import { PageHeader } from "@/components/layout/customer-shell";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -183,7 +184,7 @@ export function ManageShell({ shopId, children }: { shopId: string; children: Re
         </div>
       </header>
 
-      <div className="page-wide flex gap-10 py-8">
+      <div className="page-wide flex gap-6 py-6 sm:gap-10 sm:py-8">
         <aside className="hidden w-56 shrink-0 md:block">
           <nav aria-label="Shop management" className="sticky top-28 space-y-1">
             {items.map((item) => {
@@ -299,22 +300,10 @@ export function RequirePermission({
   return <>{children}</>;
 }
 
-export function ManageHeader({
-  title,
-  description,
-  action,
-}: {
+export function ManageHeader(props: {
   title: string;
   description?: string;
   action?: ReactNode;
 }) {
-  return (
-    <header className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 pb-6">
-      <div className="min-w-0">
-        <h1 className="type-display-xl truncate text-ink">{title}</h1>
-        {description && <p className="mt-1 text-base text-muted-foreground">{description}</p>}
-      </div>
-      {action}
-    </header>
-  );
+  return <PageHeader {...props} variant="embedded" />;
 }

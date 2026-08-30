@@ -80,7 +80,7 @@ function CustomerDetail() {
         description="Your shop's relationship with this customer."
       />
 
-      <section className="rounded-md border border-hairline bg-card p-4">
+      <section className="rounded-md border border-hairline bg-card p-4 sm:p-5 md:p-6">
         <div className="flex items-center gap-4">
           <Avatar className="size-14 shrink-0">
             {customer.photo && <AvatarImage src={customer.photo} alt="" />}

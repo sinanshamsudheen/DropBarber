@@ -83,15 +83,23 @@ export function PageHeader({
   title,
   description,
   action,
+  variant = "standalone",
 }: {
   title: string;
   description?: string;
   action?: ReactNode;
+  /** "embedded" is for shells (like ManageShell) that already provide their own top padding. */
+  variant?: "standalone" | "embedded";
 }) {
   return (
-    <header className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 py-8">
+    <header
+      className={cn(
+        "grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 sm:gap-4",
+        variant === "standalone" ? "py-6 sm:py-8" : "pb-4 sm:pb-6",
+      )}
+    >
       <div className="min-w-0">
-        <h1 className="type-display-xl text-ink">{title}</h1>
+        <h1 className="type-display-xl truncate text-ink">{title}</h1>
         {description && <p className="mt-1 text-base text-muted-foreground">{description}</p>}
       </div>
       {action}

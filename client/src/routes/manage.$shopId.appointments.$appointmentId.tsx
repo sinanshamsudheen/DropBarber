@@ -118,7 +118,7 @@ function ManageAppointmentDetail() {
         <ArrowLeft className="size-4" aria-hidden /> Appointments
       </button>
 
-      <header className="rounded-md border border-hairline bg-card p-4">
+      <header className="rounded-md border border-hairline bg-card p-4 sm:p-5 md:p-6">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
           <div className="min-w-0">
             <h1 className="truncate text-xl font-semibold">{a.customer.name}</h1>

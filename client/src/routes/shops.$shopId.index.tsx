@@ -50,7 +50,7 @@ function ShopProfile() {
   if (shopQuery.isPending) {
     return (
       <CustomerShell>
-        <div className="page-narrow space-y-6 pt-8" aria-busy="true" aria-live="polite">
+        <div className="page-narrow space-y-6 pt-8 sm:pt-10" aria-busy="true" aria-live="polite">
           <Skeleton className="h-8 w-2/3" />
           <Skeleton className="h-64 w-full rounded-md sm:h-[420px]" />
           <ListSkeleton rows={3} />
@@ -62,7 +62,7 @@ function ShopProfile() {
   if (shopQuery.isError) {
     return (
       <CustomerShell>
-        <div className="page-narrow pt-10">
+        <div className="page-narrow pt-8 sm:pt-10">
           <ErrorState
             message={(shopQuery.error as Error).message}
             onRetry={() => void shopQuery.refetch()}
@@ -81,7 +81,7 @@ function ShopProfile() {
   const secondaryPhotos = shop.photos.slice(1, 5);
 
   return (
-    <CustomerShell className="pb-32 md:pb-0">
+    <CustomerShell className="pb-32 md:pb-16 lg:pb-0">
       <div className="page-narrow pt-6">
         <Button
           variant="ghost"
@@ -129,9 +129,9 @@ function ShopProfile() {
       </div>
 
       {/* Listing detail: body on the left, sticky reservation rail on the right. */}
-      <div className="page-narrow grid gap-x-16 gap-y-10 pb-16 pt-10 lg:grid-cols-[minmax(0,1fr)_372px]">
+      <div className="page-narrow grid gap-x-8 gap-y-6 pb-16 pt-6 sm:gap-y-8 sm:pt-8 lg:grid-cols-[minmax(0,1fr)_372px] lg:gap-x-16 lg:gap-y-10 lg:pt-10">
         <div className="min-w-0">
-          <section className="border-b border-hairline pb-8">
+          <section className="border-b border-hairline pb-6 sm:pb-8">
             <h2 className="type-display-md text-ink">
               {activeBarbers.length} barbers · {activeServices.length} services
             </h2>
@@ -166,12 +166,12 @@ function ShopProfile() {
             </ul>
           </section>
 
-          <section className="border-b border-hairline py-8">
+          <section className="border-b border-hairline py-6 sm:py-8">
             <h2 className="type-display-md text-ink">About this shop</h2>
             <p className="mt-4 text-base leading-relaxed text-body">{shop.description}</p>
           </section>
 
-          <section id="services" className="border-b border-hairline py-8">
+          <section id="services" className="border-b border-hairline py-6 sm:py-8">
             <h2 className="type-display-md text-ink">What this shop offers</h2>
             <div className="mt-5 space-y-3">
               {activeServices.map((service) => (
@@ -195,7 +195,7 @@ function ShopProfile() {
             </p>
           </section>
 
-          <section className="border-b border-hairline py-8">
+          <section className="border-b border-hairline py-6 sm:py-8">
             <h2 className="type-display-md text-ink">Meet the barbers</h2>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {activeBarbers.map((barber) => (
@@ -221,7 +221,7 @@ function ShopProfile() {
             </div>
           </section>
 
-          <section className="border-b border-hairline py-8">
+          <section className="border-b border-hairline py-6 sm:py-8">
             <h2 className="type-display-md text-ink">Opening hours</h2>
             <ul className="mt-5 divide-y divide-hairline-soft">
               {shop.hours.map((h) => (
@@ -241,7 +241,7 @@ function ShopProfile() {
             </ul>
           </section>
 
-          <section className="pt-10">
+          <section className="pt-8 sm:pt-10">
             {shop.rating > 0 && (
               <div className="flex flex-col items-center pb-8">
                 <RatingDisplay

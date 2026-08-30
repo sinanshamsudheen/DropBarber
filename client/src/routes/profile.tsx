@@ -75,7 +75,7 @@ function ProfilePage() {
   if (ready && !user) {
     return (
       <CustomerShell>
-        <div className="page-narrow pb-16">
+        <div className="page-narrow pb-12 sm:pb-16">
           <PageHeader title="Profile" />
           <EmptyState
             icon={Lock}
@@ -94,14 +94,14 @@ function ProfilePage() {
 
   return (
     <CustomerShell>
-      <div className="page-narrow pb-16">
+      <div className="page-narrow pb-12 sm:pb-16">
         <PageHeader title="Profile" />
 
         {q.isPending && <ListSkeleton rows={3} />}
 
         {q.data && (
-          <div className="space-y-10">
-            <div className="flex items-center gap-5 rounded-md border border-hairline bg-card p-6">
+          <div className="space-y-8 sm:space-y-10">
+            <div className="flex items-center gap-5 rounded-md border border-hairline bg-card p-4 sm:p-5 md:p-6">
               <Avatar className="size-16">
                 <AvatarFallback className="text-lg">
                   {initials(user?.name ?? q.data.name)}
@@ -119,7 +119,7 @@ function ProfilePage() {
             {user?.memberships.length ? (
               <Link
                 to="/manage"
-                className="flex items-center gap-4 rounded-md border border-hairline bg-surface-soft p-5 transition-shadow hover:shadow-float"
+                className="flex items-center gap-4 rounded-md border border-hairline bg-surface-soft p-4 transition-shadow hover:shadow-float sm:p-5 md:p-6"
               >
                 <Store className="size-5 shrink-0 text-brand" aria-hidden />
                 <div className="min-w-0 flex-1">
@@ -135,7 +135,7 @@ function ProfilePage() {
 
             <Link
               to="/history"
-              className="flex items-center gap-4 rounded-md border border-hairline bg-card p-5 transition-shadow hover:shadow-float"
+              className="flex items-center gap-4 rounded-md border border-hairline bg-card p-4 transition-shadow hover:shadow-float sm:p-5 md:p-6"
             >
               <Clock3 className="size-5 shrink-0 text-ink" aria-hidden />
               <div className="min-w-0 flex-1">
@@ -147,7 +147,7 @@ function ProfilePage() {
 
             <section>
               <h2 className="type-display-md text-ink">Contact details</h2>
-              <div className="mt-4 rounded-md border border-hairline bg-card p-6">
+              <div className="mt-4 rounded-md border border-hairline bg-card p-4 sm:p-5 md:p-6">
                 <div>
                   <Label htmlFor="phone">Phone</Label>
                   <Input
@@ -192,7 +192,7 @@ function ProfilePage() {
 
             <section>
               <h2 className="type-display-md text-ink">Privacy</h2>
-              <div className="mt-4 space-y-5 rounded-md border border-hairline bg-card p-6">
+              <div className="mt-4 space-y-5 rounded-md border border-hairline bg-card p-4 sm:p-5 md:p-6">
                 <div className="flex items-start gap-3">
                   <ShieldCheck className="mt-0.5 size-4 shrink-0 text-ink" aria-hidden />
                   <p className="text-sm text-muted-foreground">

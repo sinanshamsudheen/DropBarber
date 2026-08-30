@@ -9,7 +9,7 @@ export function AppointmentCard({ appointment }: { appointment: HydratedAppointm
     <Link
       to="/bookings/$appointmentId"
       params={{ appointmentId: appointment.id }}
-      className="block rounded-md border border-hairline bg-card p-5 transition-shadow hover:shadow-float"
+      className="block rounded-md border border-hairline bg-card p-4 transition-shadow hover:shadow-float sm:p-5 md:p-6"
     >
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0">

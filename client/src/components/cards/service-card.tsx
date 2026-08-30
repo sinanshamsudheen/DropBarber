@@ -25,7 +25,7 @@ export function ServiceCard({
           }
         : {})}
       className={cn(
-        "flex w-full items-center gap-4 rounded-md border bg-card p-5 text-left transition-colors",
+        "flex w-full items-center gap-4 rounded-md border bg-card p-4 text-left transition-colors sm:p-5 md:p-6",
         selected ? "border-ink bg-surface-soft ring-1 ring-ink" : "border-hairline",
         onSelect && !selected && "hover:border-ink",
       )}

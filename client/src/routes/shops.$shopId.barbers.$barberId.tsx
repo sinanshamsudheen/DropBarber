@@ -63,7 +63,7 @@ function BarberProfile() {
   if (q.isPending) {
     return (
       <CustomerShell>
-        <div className="page-narrow pt-10">
+        <div className="page-narrow pt-8 sm:pt-10">
           <ListSkeleton rows={4} />
         </div>
       </CustomerShell>
@@ -72,7 +72,7 @@ function BarberProfile() {
   if (q.isError) {
     return (
       <CustomerShell>
-        <div className="page-narrow pt-10">
+        <div className="page-narrow pt-8 sm:pt-10">
           <ErrorState message={(q.error as Error).message} onRetry={() => void q.refetch()} />
         </div>
       </CustomerShell>
@@ -105,7 +105,7 @@ function BarberProfile() {
 
         <p className="mt-6 text-base leading-relaxed text-body">{barber.bio}</p>
 
-        <h2 className="type-display-md mt-10 border-t border-hairline pt-8 text-ink">
+        <h2 className="type-display-md mt-6 border-t border-hairline pt-6 text-ink sm:mt-10 sm:pt-8">
           Services &amp; timings
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -132,7 +132,7 @@ function BarberProfile() {
           })}
         </ul>
 
-        <h2 className="type-display-md mt-10 border-t border-hairline pt-8 text-ink">
+        <h2 className="type-display-md mt-6 border-t border-hairline pt-6 text-ink sm:mt-10 sm:pt-8">
           Next available
         </h2>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -172,7 +172,7 @@ function BarberProfile() {
 
         {reviews.length > 0 && (
           <>
-            <h2 className="type-display-md mt-10 border-t border-hairline pt-8 text-ink">
+            <h2 className="type-display-md mt-6 border-t border-hairline pt-6 text-ink sm:mt-10 sm:pt-8">
               Reviews
             </h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">

@@ -163,7 +163,7 @@ function DiscoverPage() {
         </div>
       </div>
 
-      <div className="page pb-16 pt-8">
+      <div className="page pb-12 pt-6 sm:pb-16 sm:pt-8">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <h1 className="type-display-xl text-ink">Barbers in {location || DEFAULT_AREA}</h1>
           <Button variant="link" size="sm" className="px-0" onClick={requestLocation}>
@@ -221,7 +221,7 @@ function DiscoverPage() {
               <p className="pb-6 text-sm text-muted-foreground">
                 {results.length} shop{results.length === 1 ? "" : "s"} nearby
               </p>
-              <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid gap-x-4 gap-y-6 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-10 lg:grid-cols-3 xl:grid-cols-4">
                 {results.map((r) => (
                   <ShopCard key={r.shop.id} shop={r.shop} fromPrice={r.fromPrice} next={r.next} />
                 ))}

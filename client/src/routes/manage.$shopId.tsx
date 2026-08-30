@@ -26,7 +26,7 @@ function ManageLayout() {
 
   if (!membershipFor(shopId)) {
     return (
-      <div className="page py-12">
+      <div className="page py-10 sm:py-12">
         <EmptyState
           icon={ShieldAlert}
           title="You don't have access to this shop"

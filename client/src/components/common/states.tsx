@@ -21,7 +21,7 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center rounded-md border border-dashed border-hairline bg-surface-soft px-6 py-16 text-center",
+        "flex flex-col items-center rounded-md border border-dashed border-hairline bg-surface-soft px-4 py-10 text-center sm:px-6 sm:py-16",
         className,
       )}
     >
@@ -54,7 +54,7 @@ export function ErrorState({
     <div
       role="alert"
       className={cn(
-        "rounded-md border border-destructive/25 bg-destructive/5 px-6 py-8 text-center",
+        "rounded-md border border-destructive/25 bg-destructive/5 px-4 py-6 text-center sm:px-6 sm:py-8",
         className,
       )}
     >
@@ -110,7 +110,7 @@ export function ListSkeleton({ rows = 3 }: { rows?: number }) {
 export function GridSkeleton({ cards = 3 }: { cards?: number }) {
   return (
     <div
-      className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      className="grid gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
       aria-busy="true"
       aria-live="polite"
     >

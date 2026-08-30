@@ -132,7 +132,7 @@ function BookingFlow() {
   if (shopQuery.isPending) {
     return (
       <CustomerShell hideNav hideHeader hideFooter>
-        <div className="page-narrow pt-10">
+        <div className="page-narrow pt-8 sm:pt-10">
           <ListSkeleton rows={4} />
         </div>
       </CustomerShell>
@@ -141,7 +141,7 @@ function BookingFlow() {
   if (shopQuery.isError) {
     return (
       <CustomerShell hideNav hideHeader hideFooter>
-        <div className="page-narrow pt-10">
+        <div className="page-narrow pt-8 sm:pt-10">
           <ErrorState
             message={(shopQuery.error as Error).message}
             onRetry={() => void shopQuery.refetch()}
@@ -161,7 +161,7 @@ function BookingFlow() {
   if (step === 6 && confirmedId) {
     return (
       <CustomerShell hideNav hideHeader hideFooter>
-        <div className="page-form py-16">
+        <div className="page-form py-10 sm:py-16">
           <span className="mx-auto grid size-16 place-items-center rounded-full bg-surface-strong text-ink">
             <CheckCircle2 className="size-8" aria-hidden />
           </span>
@@ -170,7 +170,7 @@ function BookingFlow() {
             We've sent the details to your bookings. The shop can see it right away.
           </p>
 
-          <div className="mt-8 space-y-3 rounded-md border border-hairline bg-card p-6 shadow-float">
+          <div className="mt-8 space-y-3 rounded-md border border-hairline bg-card p-4 shadow-float sm:p-5 md:p-6">
             <SummaryRow label="Shop" value={shop.name} />
             <SummaryRow label="Barber" value={barber?.name ?? ""} />
             <SummaryRow label="Service" value={service?.name ?? ""} />
@@ -261,7 +261,7 @@ function BookingFlow() {
         <Progress value={(step / 5) * 100} className="h-0.5 rounded-none" />
       </header>
 
-      <div className="page-narrow grid gap-x-16 gap-y-10 pb-16 pt-10 lg:grid-cols-[minmax(0,1fr)_372px]">
+      <div className="page-narrow grid gap-x-8 gap-y-6 pb-16 pt-6 sm:gap-y-8 sm:pt-8 lg:grid-cols-[minmax(0,1fr)_372px] lg:gap-x-16 lg:gap-y-10 lg:pt-10">
         <div className="min-w-0">
           {step === 1 && (
             <Step

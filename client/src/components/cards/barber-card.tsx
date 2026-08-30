@@ -77,7 +77,7 @@ export function BarberCard({
         onClick={onSelect}
         aria-pressed={selected}
         className={cn(
-          "w-full rounded-md border bg-card p-4 text-left transition-colors",
+          "w-full rounded-md border bg-card p-4 text-left transition-colors sm:p-5",
           selected
             ? "border-ink bg-surface-soft ring-1 ring-ink"
             : "border-hairline hover:border-ink",
@@ -87,5 +87,5 @@ export function BarberCard({
       </button>
     );
   }
-  return <div className="rounded-md border border-hairline bg-card p-4">{body}</div>;
+  return <div className="rounded-md border border-hairline bg-card p-4 sm:p-5">{body}</div>;
 }

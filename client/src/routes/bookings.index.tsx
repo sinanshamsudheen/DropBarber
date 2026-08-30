@@ -37,7 +37,7 @@ function BookingsPage() {
 
   return (
     <CustomerShell>
-      <div className="page pb-16">
+      <div className="page pb-12 sm:pb-16">
         <PageHeader title="Bookings" description="Your appointments across every shop you book." />
 
         {ready && !user && (

@@ -39,7 +39,7 @@ function HistoryPage() {
 
   return (
     <CustomerShell>
-      <div className="page pb-16">
+      <div className="page pb-12 sm:pb-16">
         <PageHeader
           title="History"
           description="This is your personal history across the shops you've visited."
@@ -85,7 +85,7 @@ function HistoryPage() {
               {q.data?.map((a) => (
                 <li
                   key={a.id}
-                  className="rounded-md border border-hairline bg-card p-5 transition-shadow hover:shadow-float"
+                  className="rounded-md border border-hairline bg-card p-4 transition-shadow hover:shadow-float sm:p-5 md:p-6"
                 >
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
                     <div className="min-w-0">
