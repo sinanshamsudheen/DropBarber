@@ -17,9 +17,7 @@ async def get_current_shop_role(user: AuthenticatedUser = Depends(get_current_us
     `require_permission` below establish the reusable dependency shape that
     future routes will plug into once this is implemented.
     """
-    raise NotImplementedError(
-        "Shop membership role resolution is not implemented until the business phase."
-    )
+    raise NotImplementedError("Shop membership role resolution is not implemented until the business phase.")
 
 
 def require_role(*allowed: Role) -> Callable[..., Coroutine[Any, Any, Role]]:

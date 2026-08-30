@@ -67,6 +67,14 @@ No migrations exist yet — `alembic/versions/` is intentionally empty until the
 uv run pytest
 ```
 
+## Lint & type check
+
+```sh
+uv run ruff check .      # lint
+uv run ruff format .      # format
+uv run ty check           # static type check
+```
+
 Covers only the foundation: app startup, `/health` + `/health/ready`, the JWT auth dependency's accept/reject behavior, and config loading/validation. `/health/ready` is asserted to return a well-formed envelope with status `200` or `503` — a real Postgres instance is not assumed to be running.
 
 ## How authentication works

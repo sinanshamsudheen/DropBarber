@@ -42,12 +42,16 @@ def _error_response(status_code: int, code: str, message: str) -> JSONResponse:
     return JSONResponse(status_code=status_code, content={"error": {"code": code, "message": message}})
 
 
-async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
+async def app_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    assert isinstance(exc, AppError)
     return _error_response(exc.status_code, exc.code, exc.message)
 
 
-async def validation_error_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
-    return _error_response(status.HTTP_422_UNPROCESSABLE_ENTITY, "VALIDATION_ERROR", "Request data is invalid.")
+async def validation_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    assert isinstance(exc, RequestValidationError)
+    return _error_response(
+        status.HTTP_422_UNPROCESSABLE_ENTITY, "VALIDATION_ERROR", "Request data is invalid."
+    )
 
 
 async def unhandled_error_handler(request: Request, exc: Exception) -> JSONResponse:

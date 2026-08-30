@@ -40,7 +40,10 @@ async def set_rls_context(session: AsyncSession, user: AuthenticatedUser | None)
     only, never leaking across pooled-connection reuse.
     """
     claims = {"sub": str(user.id)} if user else {}
-    await session.execute(text("SELECT set_config('request.jwt.claims', :claims, true)"), {"claims": json.dumps(claims)})
+    await session.execute(
+        text("SELECT set_config('request.jwt.claims', :claims, true)"),
+        {"claims": json.dumps(claims)},
+    )
     await session.execute(
         text("SELECT set_config('request.jwt.claim.sub', :sub, true)"),
         {"sub": str(user.id) if user else ""},

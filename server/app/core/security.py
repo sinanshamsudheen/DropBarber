@@ -1,9 +1,14 @@
-from typing import Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 import jwt
 
 from app.core.config import Settings
 from app.core.errors import AuthenticationError
+
+if TYPE_CHECKING:
+    from jwt.types import Options
 
 
 def decode_access_token(token: str, settings: Settings) -> dict[str, Any]:
@@ -12,7 +17,7 @@ def decode_access_token(token: str, settings: Settings) -> dict[str, Any]:
     Raises AuthenticationError for any missing/invalid signature, expiration,
     or audience mismatch — never trust a token that fails verification.
     """
-    options = {"verify_aud": bool(settings.jwt_audience)}
+    options: Options = {"verify_aud": bool(settings.jwt_audience)}
     try:
         return jwt.decode(
             token,

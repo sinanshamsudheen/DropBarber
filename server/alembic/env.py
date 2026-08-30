@@ -10,7 +10,7 @@ from app.db.base import Base
 
 # Future domain models must be imported here (once they exist) so their
 # tables register on Base.metadata before autogenerate compares against it.
-# e.g. `from app.shops.models import Shop  # noqa: F401`
+# e.g. `from app.shops.models import Shop`
 
 config = context.config
 
