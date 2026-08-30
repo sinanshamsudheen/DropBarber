@@ -108,7 +108,7 @@ function DiscoverPage() {
     >
       {/* Category strip: quick rating tabs left, view toggle right. */}
       <div className="border-b border-hairline">
-        <div className="page flex items-center justify-between gap-6 overflow-x-auto">
+        <div className="page flex items-center gap-3 overflow-x-auto sm:gap-6">
           <div role="tablist" aria-label="Filter by rating" className="flex shrink-0 gap-8">
             {RATING_TABS.map((tab) => {
               const active = minRating === tab.value;
@@ -121,6 +121,7 @@ function DiscoverPage() {
                   onClick={() => setMinRating(tab.value)}
                   className={cn(
                     "shrink-0 border-b-2 pb-4 pt-5 text-sm font-medium transition-colors",
+                    tab.value !== 0 && "hidden sm:block",
                     active
                       ? "border-ink text-ink"
                       : "border-transparent text-muted-foreground hover:border-hairline hover:text-ink",
@@ -132,15 +133,18 @@ function DiscoverPage() {
             })}
           </div>
 
+          <Button
+            variant="secondary"
+            size="sm"
+            className="rounded-full shrink-0 ml-auto"
+            onClick={requestLocation}
+            disabled={locationState === "requesting"}
+          >
+            <LocateFixed className="size-4" aria-hidden />
+            {locationState === "requesting" ? "Finding you…" : "Near me"}
+          </Button>
+
           <div className="flex shrink-0 items-center gap-2 py-3">
-            <Button
-              variant="secondary"
-              size="sm"
-              className="rounded-full"
-              onClick={() => setSheetOpen(true)}
-            >
-              Within {maxDistance} km
-            </Button>
             <Button
               variant="secondary"
               size="sm"
@@ -164,13 +168,7 @@ function DiscoverPage() {
       </div>
 
       <div className="page pb-12 pt-6 sm:pb-16 sm:pt-8">
-        <div className="flex flex-wrap items-baseline justify-between gap-3">
-          <h1 className="type-display-xl text-ink">Barbers in {location || DEFAULT_AREA}</h1>
-          <Button variant="link" size="sm" className="px-0" onClick={requestLocation}>
-            <LocateFixed className="size-4" aria-hidden />
-            {locationState === "requesting" ? "Finding you…" : "Use my location"}
-          </Button>
-        </div>
+        <h1 className="type-display-xl text-ink">Barbers in {location || DEFAULT_AREA}</h1>
 
         {locationState === "denied" && (
           <p className="mt-4 rounded-md border border-hairline bg-surface-soft px-4 py-3 text-sm text-body">
@@ -192,7 +190,7 @@ function DiscoverPage() {
           </div>
         )}
 
-        <div className="mt-8">
+        <div className="mt-4">
           {shopsQuery.isPending && <GridSkeleton cards={8} />}
 
           {shopsQuery.isError && (

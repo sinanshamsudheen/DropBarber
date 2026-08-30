@@ -178,7 +178,7 @@ export function SiteHeader({ search }: { search?: ReactNode }) {
           <Wordmark />
           <nav
             aria-label="Products"
-            className="flex items-end justify-center gap-8 self-stretch pt-4"
+            className="flex items-end justify-center gap-8 self-stretch pt-2"
           >
             {PRODUCT_TABS.map((tab) => (
               <ProductTab key={tab.to} tab={tab} />
