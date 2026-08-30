@@ -120,7 +120,11 @@ export function ManageShell({ shopId, children }: { shopId: string; children: Re
               <DropdownMenuTrigger asChild>
                 <button className="flex min-w-0 items-center gap-3 rounded-full px-2 py-2 text-left transition-colors hover:bg-surface-soft">
                   <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-on-brand">
-                    <Scissors className="size-5" aria-hidden />
+                    <svg viewBox="55.5 53.5 151 151" fill="currentColor" className="size-5" aria-hidden>
+                      <path d="M136 54 A74 74 0 0 0 124 202 Z" />
+                      <path d="M152 54 L168 54 L162 204 L157 204 Z" />
+                      <circle cx="190" cy="188" r="16" />
+                    </svg>
                   </span>
                   <span className="min-w-0">
                     <span className="type-title-md block truncate text-ink">
