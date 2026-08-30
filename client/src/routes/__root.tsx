@@ -104,7 +104,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      /* Modern browsers take the SVG and render it crisp at any density; the
+         .ico carries 16/32/48 raster frames for everything that doesn't. */
+      { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
+      { rel: "icon", href: "/brand/drop-icon.svg", type: "image/svg+xml" },
     ],
   }),
   shellComponent: RootShell,
