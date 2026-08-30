@@ -1,6 +1,9 @@
 import os
 
-os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/dropbarber_test")
+# Matches the local Supabase CLI stack (`npx supabase start` from the repo
+# root) so tests/test_schema.py can run against a real, migrated database
+# when one is available; other tests only need this to be well-formed.
+os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@127.0.0.1:54322/postgres")
 os.environ.setdefault("JWT_SECRET_KEY", "test-secret")
 os.environ.setdefault("CORS_ALLOWED_ORIGINS", "http://localhost:3000")
 

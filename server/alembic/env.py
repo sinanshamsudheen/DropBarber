@@ -5,12 +5,21 @@ from sqlalchemy import Connection, pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
-from app.core.config import get_settings
-from app.db.base import Base
 
-# Future domain models must be imported here (once they exist) so their
-# tables register on Base.metadata before autogenerate compares against it.
-# e.g. `from app.shops.models import Shop`
+# Every domain model must be imported here so its table registers on
+# Base.metadata before autogenerate compares against it.
+from app.appointments.models import Appointment, AppointmentDetails  # noqa: F401
+from app.availability.models import BarberTimeOff, BarberWorkingHours  # noqa: F401
+from app.core.config import get_settings
+from app.customers.models import CustomerProfile, ShopCustomer  # noqa: F401
+from app.db.base import Base
+from app.media.models import AppointmentMedia, CustomerPreferenceMedia, MediaAsset  # noqa: F401
+from app.points.models import BarberPoint  # noqa: F401
+from app.reviews.models import Review  # noqa: F401
+from app.services.models import BarberService, Service  # noqa: F401
+from app.shops.models import Shop  # noqa: F401
+from app.staff.models import BarberProfile, ShopMember  # noqa: F401
+from app.users.models import User  # noqa: F401
 
 config = context.config
 

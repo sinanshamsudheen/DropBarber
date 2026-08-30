@@ -1,0 +1,4 @@
+# Node (supabase CLI devDependency)
+node_modules/
+
+.DS_Store
