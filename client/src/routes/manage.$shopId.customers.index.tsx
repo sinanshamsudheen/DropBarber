@@ -3,10 +3,16 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Search, Users } from "lucide-react";
 import { useState } from "react";
 import { CustomerCard } from "@/components/cards/customer-card";
-import { EmptyState, ErrorState, ListSkeleton } from "@/components/common/states";
+import {
+  EmptyState,
+  ErrorState,
+  ListSkeleton,
+} from "@/components/common/states";
 import { ManageHeader } from "@/components/layout/manage-shell";
 import { Input } from "@/components/ui/input";
-import { listShopCustomers } from "@/lib/api";
+import { listShopCustomersApiV1ShopsShopIdCustomersGetQueryOptions } from "@/lib/api/generated/hooks/useListShopCustomersApiV1ShopsShopIdCustomersGet";
+import { getErrorMessage } from "@/lib/api-client";
+import { mapShopCustomerSummary } from "@/lib/domain-mappers";
 
 export const Route = createFileRoute("/manage/$shopId/customers/")({
   component: CustomersPage,
@@ -15,10 +21,23 @@ export const Route = createFileRoute("/manage/$shopId/customers/")({
 function CustomersPage() {
   const { shopId } = Route.useParams();
   const [query, setQuery] = useState("");
-  const q = useQuery({
-    queryKey: ["shop-customers", shopId, query],
-    queryFn: () => listShopCustomers(shopId, query),
-  });
+  const listQuery = useQuery(
+    listShopCustomersApiV1ShopsShopIdCustomersGetQueryOptions({
+      path: { shop_id: shopId },
+      query: { q: query || null },
+    }),
+  );
+  const q = {
+    ...listQuery,
+    data: listQuery.data?.data.map((row) => ({
+      customer: mapShopCustomerSummary(row),
+      visits: row.visits,
+      lastVisit: row.last_visit?.slice(0, 10) ?? null,
+      lastAppointmentDate: row.last_visit?.slice(0, 10) ?? null,
+      preferredBarber: null,
+      spend: 0,
+    })),
+  };
 
   return (
     <div>
@@ -44,12 +63,17 @@ function CustomersPage() {
       <div className="mt-4">
         {q.isPending && <ListSkeleton rows={4} />}
         {q.isError && (
-          <ErrorState message={(q.error as Error).message} onRetry={() => void q.refetch()} />
+          <ErrorState
+            message={getErrorMessage(q.error)}
+            onRetry={() => void q.refetch()}
+          />
         )}
-        {q.isSuccess && q.data.length === 0 && (
+        {q.data?.length === 0 && (
           <EmptyState
             icon={Users}
-            title={query ? "No customers match that search" : "No customers yet"}
+            title={
+              query ? "No customers match that search" : "No customers yet"
+            }
             description={
               query
                 ? "Try a different name or phone number."

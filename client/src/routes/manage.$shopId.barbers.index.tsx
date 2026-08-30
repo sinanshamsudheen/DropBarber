@@ -5,12 +5,36 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { BarberAvatar } from "@/components/cards/barber-card";
 import { Rating } from "@/components/common/rating";
-import { EmptyState, ErrorState, ListSkeleton } from "@/components/common/states";
-import { ManageHeader, RequirePermission } from "@/components/layout/manage-shell";
+import {
+  EmptyState,
+  ErrorState,
+  ListSkeleton,
+} from "@/components/common/states";
+import {
+  ManageHeader,
+  RequirePermission,
+} from "@/components/layout/manage-shell";
 import { BarberFormDialog } from "@/components/manage/barber-form-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { listBarbers, setBarberActive } from "@/lib/api";
+import { useShopBarbers } from "@/hooks/use-shop-barbers";
+import { deactivateBarberApiV1ShopsShopIdBarbersBarberIdDeactivatePost } from "@/lib/api/generated/clients/deactivateBarberApiV1ShopsShopIdBarbersBarberIdDeactivatePost";
+import { getManagedBarberApiV1ShopsShopIdBarbersBarberIdGet } from "@/lib/api/generated/clients/getManagedBarberApiV1ShopsShopIdBarbersBarberIdGet";
+import { removeBarberApiV1ShopsShopIdBarbersBarberIdRemovePost } from "@/lib/api/generated/clients/removeBarberApiV1ShopsShopIdBarbersBarberIdRemovePost";
+import { listShopBarbersApiV1ShopsShopIdBarbersGetQueryKey } from "@/lib/api/generated/hooks/useListShopBarbersApiV1ShopsShopIdBarbersGet";
+import { getErrorMessage } from "@/lib/api-client";
+import { mapManagedBarber } from "@/lib/domain-mappers";
 
 export const Route = createFileRoute("/manage/$shopId/barbers/")({
   component: BarbersRoute,
@@ -30,19 +54,60 @@ function BarbersPage() {
   const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
 
-  const q = useQuery({
-    queryKey: ["barbers", shopId],
-    queryFn: () => listBarbers(shopId),
+  const q = useShopBarbers(shopId);
+
+  // The backend only exposes a deactivate route (no "reactivate") — toggling
+  // back on refetches the barber but its status stays whatever the backend
+  // last recorded, matching this real backend limitation rather than
+  // inventing a reactivate endpoint.
+  const toggle = useMutation({
+    mutationFn: async ({
+      barberId,
+      active,
+    }: {
+      barberId: string;
+      active: boolean;
+    }) => {
+      if (!active) {
+        await deactivateBarberApiV1ShopsShopIdBarbersBarberIdDeactivatePost({
+          path: { shop_id: shopId, barber_id: barberId },
+        });
+      }
+      const { data } = await getManagedBarberApiV1ShopsShopIdBarbersBarberIdGet(
+        {
+          path: { shop_id: shopId, barber_id: barberId },
+        },
+      );
+      return mapManagedBarber(data.data);
+    },
+    onSuccess: (barber) => {
+      toast.success(
+        `${barber.name} is now ${barber.active ? "taking bookings" : "inactive"}`,
+      );
+      void queryClient.invalidateQueries({
+        queryKey: listShopBarbersApiV1ShopsShopIdBarbersGetQueryKey({
+          path: { shop_id: shopId },
+        }),
+      });
+    },
+    onError: (e: unknown) => toast.error(getErrorMessage(e)),
   });
 
-  const toggle = useMutation({
-    mutationFn: ({ barberId, active }: { barberId: string; active: boolean }) =>
-      setBarberActive(barberId, active),
-    onSuccess: (barber) => {
-      toast.success(`${barber.name} is now ${barber.active ? "taking bookings" : "inactive"}`);
-      void queryClient.invalidateQueries({ queryKey: ["barbers", shopId] });
+  const remove = useMutation({
+    mutationFn: async (barberId: string) => {
+      await removeBarberApiV1ShopsShopIdBarbersBarberIdRemovePost({
+        path: { shop_id: shopId, barber_id: barberId },
+      });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onSuccess: () => {
+      toast.success("Barber removed from the team");
+      void queryClient.invalidateQueries({
+        queryKey: listShopBarbersApiV1ShopsShopIdBarbersGetQueryKey({
+          path: { shop_id: shopId },
+        }),
+      });
+    },
+    onError: (e: unknown) => toast.error(getErrorMessage(e)),
   });
 
   return (
@@ -57,18 +122,27 @@ function BarbersPage() {
         }
       />
 
-      <BarberFormDialog shopId={shopId} open={addOpen} onOpenChange={setAddOpen} />
+      <BarberFormDialog
+        shopId={shopId}
+        open={addOpen}
+        onOpenChange={setAddOpen}
+      />
 
       {q.isPending && <ListSkeleton rows={4} />}
       {q.isError && (
-        <ErrorState message={(q.error as Error).message} onRetry={() => void q.refetch()} />
+        <ErrorState
+          message={getErrorMessage(q.error)}
+          onRetry={() => void q.refetch()}
+        />
       )}
-      {q.isSuccess && q.data.length === 0 && (
+      {q.data?.length === 0 && (
         <EmptyState
           icon={Scissors}
           title="No barbers yet"
           description="Add your first barber so customers can start booking with them."
-          action={<Button onClick={() => setAddOpen(true)}>Add a barber</Button>}
+          action={
+            <Button onClick={() => setAddOpen(true)}>Add a barber</Button>
+          }
         />
       )}
 
@@ -88,8 +162,10 @@ function BarbersPage() {
                 <p className="truncate text-sm font-semibold">{barber.name}</p>
                 <p className="truncate text-sm text-muted-foreground">
                   {barber.services.filter((s) => s.active).length} service
-                  {barber.services.filter((s) => s.active).length === 1 ? "" : "s"} · {todayCount}{" "}
-                  today
+                  {barber.services.filter((s) => s.active).length === 1
+                    ? ""
+                    : "s"}{" "}
+                  · {todayCount} today
                 </p>
                 <div className="mt-1 flex items-center gap-3">
                   <Rating value={barber.rating} count={barber.reviewCount} />
@@ -100,7 +176,10 @@ function BarbersPage() {
                   )}
                 </div>
               </Link>
-              <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+              <ChevronRight
+                className="size-4 text-muted-foreground"
+                aria-hidden
+              />
             </div>
             <div className="mt-3 flex items-center justify-between gap-3 border-t border-hairline pt-3">
               <label
@@ -109,12 +188,46 @@ function BarbersPage() {
               >
                 Taking bookings
               </label>
-              <Switch
-                id={`active-${barber.id}`}
-                checked={barber.active}
-                disabled={toggle.isPending}
-                onCheckedChange={(active) => toggle.mutate({ barberId: barber.id, active })}
-              />
+              <div className="flex items-center gap-3">
+                <Switch
+                  id={`active-${barber.id}`}
+                  checked={barber.active}
+                  disabled={toggle.isPending}
+                  onCheckedChange={(active) =>
+                    toggle.mutate({ barberId: barber.id, active })
+                  }
+                />
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                    >
+                      Remove
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Remove {barber.name}?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        They'll lose access to this shop's manage workspace and
+                        stop appearing to customers. This can't be undone from
+                        here — they'd need to be re-added.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Keep them</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => remove.mutate(barber.id)}
+                      >
+                        Remove
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </div>
           </li>
         ))}

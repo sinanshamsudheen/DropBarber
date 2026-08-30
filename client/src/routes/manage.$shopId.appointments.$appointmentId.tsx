@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, CheckCircle2, ImageIcon, UserX } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -9,17 +9,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  closeAppointmentWithoutDetails,
-  completeAppointment,
-  getAppointment,
-  getShopCustomer,
-  markNoShow,
-} from "@/lib/api";
+import { useAppointmentDetail } from "@/hooks/use-appointment-detail";
+import { useShopCustomer } from "@/hooks/use-shop-customer";
+import { completeAppointmentApiV1AppointmentsAppointmentIdCompletePost } from "@/lib/api/generated/clients/completeAppointmentApiV1AppointmentsAppointmentIdCompletePost";
+import { markNoShowApiV1AppointmentsAppointmentIdNoShowPost } from "@/lib/api/generated/clients/markNoShowApiV1AppointmentsAppointmentIdNoShowPost";
+import { skipCompletionApiV1AppointmentsAppointmentIdSkipCompletionPost } from "@/lib/api/generated/clients/skipCompletionApiV1AppointmentsAppointmentIdSkipCompletionPost";
+import { getErrorMessage } from "@/lib/api-client";
 import { longDate, money, timeLabel } from "@/lib/format";
 import { useSession } from "@/lib/session";
 
-export const Route = createFileRoute("/manage/$shopId/appointments/$appointmentId")({
+export const Route = createFileRoute(
+  "/manage/$shopId/appointments/$appointmentId",
+)({
   component: ManageAppointmentDetail,
 });
 
@@ -29,15 +30,8 @@ function ManageAppointmentDetail() {
   const queryClient = useQueryClient();
   const { user } = useSession();
 
-  const q = useQuery({
-    queryKey: ["appointment", appointmentId],
-    queryFn: () => getAppointment(appointmentId),
-  });
-  const historyQuery = useQuery({
-    queryKey: ["shop-customer", shopId, q.data?.customerId],
-    queryFn: () => getShopCustomer(shopId, q.data!.customerId),
-    enabled: !!q.data,
-  });
+  const q = useAppointmentDetail(appointmentId);
+  const historyQuery = useShopCustomer(shopId, q.data?.customerId);
 
   const [actualService, setActualService] = useState("");
   const [finalPrice, setFinalPrice] = useState("");
@@ -46,16 +40,15 @@ function ManageAppointmentDetail() {
 
   useEffect(() => {
     if (q.data) {
-      setActualService((v) => v || q.data.service.name);
+      setActualService((v) => v || (q.data.service?.name ?? ""));
       setFinalPrice((v) => v || String(q.data.price));
     }
   }, [q.data]);
 
   const invalidate = () => {
     void queryClient.invalidateQueries({
-      queryKey: ["appointment", appointmentId],
+      queryKey: ["appointment-detail", appointmentId],
     });
-    void queryClient.invalidateQueries({ queryKey: ["shop-day", shopId] });
     void queryClient.invalidateQueries({
       queryKey: ["shop-appointments", shopId],
     });
@@ -63,41 +56,65 @@ function ManageAppointmentDetail() {
   };
 
   const complete = useMutation({
-    mutationFn: () =>
-      completeAppointment(appointmentId, {
-        actualService,
-        finalPrice: Number(finalPrice) || 0,
-        ...(notes ? { notes } : {}),
-        ...(finishedPhoto ? { finishedPhoto } : {}),
-      }),
+    // The backend's `actual_service_id` is a UUID reference (no free-text
+    // field exists) — the "service actually performed" text staff type here
+    // has nowhere to go structurally, so it's folded into notes rather than
+    // silently dropped or (as the prior code did) sent as an invalid UUID
+    // that the backend would reject with a 422.
+    mutationFn: () => {
+      const performedNote =
+        actualService && actualService !== (q.data?.service?.name ?? "")
+          ? `Performed: ${actualService}`
+          : null;
+      return completeAppointmentApiV1AppointmentsAppointmentIdCompletePost({
+        path: { appointment_id: appointmentId },
+        body: {
+          actual_service_id: null,
+          final_price: Number(finalPrice) || 0,
+          notes:
+            [performedNote, notes || null].filter(Boolean).join(" — ") || null,
+        },
+      });
+    },
     onSuccess: () => {
       toast.success("Record completed — 10 points earned");
       invalidate();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: unknown) => toast.error(getErrorMessage(e)),
   });
 
   const quickClose = useMutation({
-    mutationFn: () => closeAppointmentWithoutDetails(appointmentId),
+    mutationFn: () =>
+      skipCompletionApiV1AppointmentsAppointmentIdSkipCompletionPost({
+        path: { appointment_id: appointmentId },
+      }),
     onSuccess: () => {
       toast.success("Marked as done");
       invalidate();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: unknown) => toast.error(getErrorMessage(e)),
   });
 
   const noShow = useMutation({
-    mutationFn: () => markNoShow(appointmentId),
+    mutationFn: () =>
+      markNoShowApiV1AppointmentsAppointmentIdNoShowPost({
+        path: { appointment_id: appointmentId },
+      }),
     onSuccess: () => {
       toast.success("Marked as a no-show");
       invalidate();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: unknown) => toast.error(getErrorMessage(e)),
   });
 
   if (q.isPending) return <ListSkeleton rows={4} />;
   if (q.isError || !q.data)
-    return <ErrorState message={(q.error as Error)?.message} onRetry={() => void q.refetch()} />;
+    return (
+      <ErrorState
+        message={getErrorMessage(q.error)}
+        onRetry={() => void q.refetch()}
+      />
+    );
 
   const a = q.data;
   const pastVisits = (historyQuery.data?.appointments ?? []).filter(
@@ -121,7 +138,9 @@ function ManageAppointmentDetail() {
       <header className="rounded-md border border-hairline bg-card p-4 sm:p-5 md:p-6">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
           <div className="min-w-0">
-            <h1 className="truncate text-xl font-semibold">{a.customer.name}</h1>
+            <h1 className="truncate text-xl font-semibold">
+              {a.customer?.name ?? "Customer"}
+            </h1>
             <p className="text-sm text-muted-foreground">
               {longDate(a.date)} · {timeLabel(a.time)} · {a.durationMin} min
             </p>
@@ -129,12 +148,16 @@ function ManageAppointmentDetail() {
           <StatusBadge status={a.status} />
         </div>
         <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-          <Field label="Service" value={a.service.name} />
+          <Field label="Service" value={a.service?.name ?? "—"} />
           <Field label="Barber" value={a.barber.name} />
           <Field label="Booked price" value={money(a.price)} />
-          <Field label="Phone" value={a.customer.phone} />
+          <Field label="Phone" value={a.customer?.phone ?? "—"} />
         </dl>
-        {a.note && <p className="mt-3 rounded-sm bg-surface-strong p-3 text-sm">“{a.note}”</p>}
+        {a.note && (
+          <p className="mt-3 rounded-sm bg-surface-strong p-3 text-sm">
+            “{a.note}”
+          </p>
+        )}
         <div className="mt-3">
           <Link
             to="/manage/$shopId/customers/$customerId"
@@ -151,7 +174,10 @@ function ManageAppointmentDetail() {
           <h2 className="type-display-sm text-ink">Reference photos</h2>
           <div className="mt-2 grid grid-cols-3 gap-2">
             {a.referencePhotos.map((p) => (
-              <figure key={p.id} className="overflow-hidden rounded-sm border border-hairline">
+              <figure
+                key={p.id}
+                className="overflow-hidden rounded-sm border border-hairline"
+              >
                 <img
                   src={p.url}
                   alt={p.caption ? p.caption : "Reference photo"}
@@ -165,20 +191,30 @@ function ManageAppointmentDetail() {
       )}
 
       <section>
-        <h2 className="type-display-sm text-ink">Previous visits at this shop</h2>
+        <h2 className="type-display-sm text-ink">
+          Previous visits at this shop
+        </h2>
         {pastVisits.length === 0 ? (
-          <p className="mt-2 text-sm text-muted-foreground">First time with you — make it count.</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            First time with you — make it count.
+          </p>
         ) : (
           <ul className="mt-2 space-y-2">
             {pastVisits.slice(0, 4).map((v) => (
-              <li key={v.id} className="rounded-sm border border-hairline bg-card p-3 text-sm">
+              <li
+                key={v.id}
+                className="rounded-sm border border-hairline bg-card p-3 text-sm"
+              >
                 <p className="font-medium">
-                  {longDate(v.date)} · {v.completion?.actualService ?? v.service.name}
+                  {longDate(v.date)} ·{" "}
+                  {v.completion?.actualService ?? v.service?.name ?? "Service"}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {v.barber.name} · {money(v.completion?.finalPrice ?? v.price)}
                 </p>
-                {v.completion?.notes && <p className="mt-1 text-sm">“{v.completion.notes}”</p>}
+                {v.completion?.notes && (
+                  <p className="mt-1 text-sm">“{v.completion.notes}”</p>
+                )}
               </li>
             ))}
           </ul>
@@ -188,20 +224,33 @@ function ManageAppointmentDetail() {
       {a.status === "completed" ? (
         <section className="rounded-md border border-success/30 bg-success/8 p-4">
           <h2 className="flex items-center gap-2 text-sm font-semibold">
-            <CheckCircle2 className="size-4 text-success" aria-hidden /> Service record
+            <CheckCircle2 className="size-4 text-success" aria-hidden /> Service
+            record
           </h2>
           {a.completion ? (
             <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
               <Field
                 label="Service performed"
-                value={a.completion.actualService ?? a.service.name}
+                value={
+                  a.completion.actualService ?? a.service?.name ?? "Service"
+                }
               />
-              <Field label="Final price" value={money(a.completion.finalPrice)} />
-              {a.completion.notes && <Field label="Notes" value={a.completion.notes} />}
-              <Field label="Points awarded" value={`${a.completion.pointsAwarded}`} />
+              <Field
+                label="Final price"
+                value={money(a.completion.finalPrice)}
+              />
+              {a.completion.notes && (
+                <Field label="Notes" value={a.completion.notes} />
+              )}
+              <Field
+                label="Points awarded"
+                value={`${a.completion.pointsAwarded}`}
+              />
             </dl>
           ) : (
-            <p className="mt-2 text-sm text-muted-foreground">Closed without a detailed record.</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Closed without a detailed record.
+            </p>
           )}
           {a.completion?.finishedPhoto && (
             <img
@@ -216,7 +265,8 @@ function ManageAppointmentDetail() {
         <section className="rounded-md border border-hairline bg-card p-4">
           <h2 className="text-base font-semibold">Complete the record</h2>
           <p className="text-sm text-muted-foreground">
-            Logged by {user?.name ?? "you"}. Completing a record earns 10 points.
+            Logged by {user?.name ?? "you"}. Completing a record earns 10
+            points.
           </p>
           <div className="mt-4 space-y-3">
             <div>
@@ -234,7 +284,9 @@ function ManageAppointmentDetail() {
                 id="price"
                 inputMode="numeric"
                 value={finalPrice}
-                onChange={(e) => setFinalPrice(e.target.value.replace(/[^\d]/g, ""))}
+                onChange={(e) =>
+                  setFinalPrice(e.target.value.replace(/[^\d]/g, ""))
+                }
                 className="mt-2"
               />
             </div>
@@ -249,9 +301,14 @@ function ManageAppointmentDetail() {
               />
             </div>
             <div>
-              <Label htmlFor="photo">Finished haircut photo URL (private)</Label>
+              <Label htmlFor="photo">
+                Finished haircut photo URL (private)
+              </Label>
               <div className="mt-1.5 flex items-center gap-2">
-                <ImageIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                <ImageIcon
+                  className="size-4 shrink-0 text-muted-foreground"
+                  aria-hidden
+                />
                 <Input
                   id="photo"
                   value={finishedPhoto}
@@ -278,7 +335,11 @@ function ManageAppointmentDetail() {
               >
                 Done, skip details
               </Button>
-              <Button variant="outline" disabled={noShow.isPending} onClick={() => noShow.mutate()}>
+              <Button
+                variant="outline"
+                disabled={noShow.isPending}
+                onClick={() => noShow.mutate()}
+              >
                 <UserX className="size-4" aria-hidden /> No-show
               </Button>
             </div>
@@ -286,7 +347,8 @@ function ManageAppointmentDetail() {
         </section>
       ) : (
         <section className="rounded-md border border-hairline bg-card p-4 text-sm text-muted-foreground">
-          This appointment was {a.status === "no_show" ? "marked as a no-show" : "cancelled"}.
+          This appointment was{" "}
+          {a.status === "no_show" ? "marked as a no-show" : "cancelled"}.
         </section>
       )}
     </div>

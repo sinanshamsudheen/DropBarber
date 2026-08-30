@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   CalendarRange,
@@ -25,7 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { shops } from "@/lib/mock-data";
+import { listMyShopsApiV1MyShopsGetQueryOptions } from "@/lib/api/generated/hooks/useListMyShopsApiV1MyShopsGet";
 import { useSession, type Permission } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
@@ -97,15 +98,25 @@ function useVisibleItems(shopId: string) {
 
 function isActive(pathname: string, to: string, shopId: string) {
   const resolved = to.replace("$shopId", shopId);
-  return to.endsWith("$shopId") ? pathname === resolved : pathname.startsWith(resolved);
+  return to.endsWith("$shopId")
+    ? pathname === resolved
+    : pathname.startsWith(resolved);
 }
 
-export function ManageShell({ shopId, children }: { shopId: string; children: ReactNode }) {
+export function ManageShell({
+  shopId,
+  children,
+}: {
+  shopId: string;
+  children: ReactNode;
+}) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const items = useVisibleItems(shopId);
   const { user, logout, membershipFor } = useSession();
   const navigate = useNavigate();
-  const shop = shops.find((s) => s.id === shopId);
+  const myShopsQuery = useQuery(listMyShopsApiV1MyShopsGetQueryOptions({}));
+  const myShops = myShopsQuery.data?.data ?? [];
+  const shop = myShops.find((s) => s.id === shopId);
   const membership = membershipFor(shopId);
   const memberships = user?.memberships ?? [];
 
@@ -121,7 +132,12 @@ export function ManageShell({ shopId, children }: { shopId: string; children: Re
               <DropdownMenuTrigger asChild>
                 <button className="flex min-w-0 items-center gap-3 rounded-full px-2 py-2 text-left transition-colors hover:bg-surface-soft">
                   <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand text-on-brand">
-                    <svg viewBox="55.5 53.5 151 151" fill="currentColor" className="size-5" aria-hidden>
+                    <svg
+                      viewBox="55.5 53.5 151 151"
+                      fill="currentColor"
+                      className="size-5"
+                      aria-hidden
+                    >
                       <path d="M136 54 A74 74 0 0 0 124 202 Z" />
                       <path d="M152 54 L168 54 L162 204 L157 204 Z" />
                       <circle cx="190" cy="188" r="16" />
@@ -153,9 +169,11 @@ export function ManageShell({ shopId, children }: { shopId: string; children: Re
                     }
                   >
                     <span className="flex-1 truncate">
-                      {shops.find((s) => s.id === m.shopId)?.name}
+                      {myShops.find((s) => s.id === m.shopId)?.name}
                     </span>
-                    <span className="text-sm capitalize text-muted-foreground">{m.role}</span>
+                    <span className="text-sm capitalize text-muted-foreground">
+                      {m.role}
+                    </span>
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />

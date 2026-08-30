@@ -1,9 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { CalendarX } from "lucide-react";
 import { DateStrip } from "@/components/booking/date-strip";
 import { StatusBadge } from "@/components/common/status-badge";
-import { EmptyState, ErrorState, ListSkeleton } from "@/components/common/states";
+import {
+  EmptyState,
+  ErrorState,
+  ListSkeleton,
+} from "@/components/common/states";
 import { ManageHeader } from "@/components/layout/manage-shell";
 import {
   Select,
@@ -12,7 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { listBarbers, listShopAppointments } from "@/lib/api";
+import { useShopAppointments } from "@/hooks/use-shop-appointments";
+import { useShopBarbers } from "@/hooks/use-shop-barbers";
+import { getErrorMessage } from "@/lib/api-client";
 import { longDate, money, timeLabel, todayISO } from "@/lib/format";
 import type { AppointmentStatus } from "@/lib/types";
 
@@ -26,7 +31,8 @@ export const Route = createFileRoute("/manage/$shopId/appointments/")({
   validateSearch: (search: Record<string, unknown>): Search => {
     const out: Search = {};
     if (typeof search["date"] === "string") out.date = search["date"];
-    if (typeof search["barberId"] === "string") out.barberId = search["barberId"];
+    if (typeof search["barberId"] === "string")
+      out.barberId = search["barberId"];
     if (typeof search["status"] === "string") out.status = search["status"];
     return out;
   },
@@ -54,18 +60,14 @@ function AppointmentsPage() {
       search: { ...search, ...patch },
     });
 
-  const barbersQuery = useQuery({
-    queryKey: ["barbers", shopId],
-    queryFn: () => listBarbers(shopId),
-  });
-  const q = useQuery({
-    queryKey: ["shop-appointments", shopId, date],
-    queryFn: () => listShopAppointments(shopId, date),
-  });
+  const barbersQuery = useShopBarbers(shopId);
+  const q = useShopAppointments(shopId, date);
 
   const rows = (q.data ?? []).filter(
     (a) =>
-      (!search.barberId || search.barberId === "all" || a.barberId === search.barberId) &&
+      (!search.barberId ||
+        search.barberId === "all" ||
+        a.barberId === search.barberId) &&
       (!search.status ||
         search.status === "all" ||
         a.status === (search.status as AppointmentStatus)),
@@ -75,10 +77,17 @@ function AppointmentsPage() {
     <div>
       <ManageHeader title="Appointments" description={longDate(date)} />
 
-      <DateStrip value={date} onChange={(d) => setSearch({ date: d })} days={21} />
+      <DateStrip
+        value={date}
+        onChange={(d) => setSearch({ date: d })}
+        days={21}
+      />
 
       <div className="mt-4 grid grid-cols-2 gap-2">
-        <Select value={search.barberId ?? "all"} onValueChange={(v) => setSearch({ barberId: v })}>
+        <Select
+          value={search.barberId ?? "all"}
+          onValueChange={(v) => setSearch({ barberId: v })}
+        >
           <SelectTrigger aria-label="Filter by barber">
             <SelectValue placeholder="All barbers" />
           </SelectTrigger>
@@ -91,7 +100,10 @@ function AppointmentsPage() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={search.status ?? "all"} onValueChange={(v) => setSearch({ status: v })}>
+        <Select
+          value={search.status ?? "all"}
+          onValueChange={(v) => setSearch({ status: v })}
+        >
           <SelectTrigger aria-label="Filter by status">
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
@@ -108,7 +120,10 @@ function AppointmentsPage() {
       <div className="mt-5">
         {q.isPending && <ListSkeleton rows={4} />}
         {q.isError && (
-          <ErrorState message={(q.error as Error).message} onRetry={() => void q.refetch()} />
+          <ErrorState
+            message={getErrorMessage(q.error)}
+            onRetry={() => void q.refetch()}
+          />
         )}
         {q.isSuccess && rows.length === 0 && (
           <EmptyState
@@ -126,13 +141,19 @@ function AppointmentsPage() {
                 className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-sm border border-hairline bg-card p-3.5 transition-colors hover:border-ink"
               >
                 <span className="w-16 shrink-0">
-                  <span className="block text-sm font-semibold">{timeLabel(a.time)}</span>
-                  <span className="block text-[11px] text-muted-foreground">{a.durationMin}m</span>
+                  <span className="block text-sm font-semibold">
+                    {timeLabel(a.time)}
+                  </span>
+                  <span className="block text-[11px] text-muted-foreground">
+                    {a.durationMin}m
+                  </span>
                 </span>
                 <span className="min-w-0">
-                  <span className="block truncate text-sm font-medium">{a.customer.name}</span>
+                  <span className="block truncate text-sm font-medium">
+                    {a.customer?.name ?? "Customer"}
+                  </span>
                   <span className="block truncate text-sm text-muted-foreground">
-                    {a.service.name} · {a.barber.name} ·{" "}
+                    {a.service?.name ?? "Service"} · {a.barber.name} ·{" "}
                     {money(a.completion?.finalPrice ?? a.price)}
                   </span>
                 </span>

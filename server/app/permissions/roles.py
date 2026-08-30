@@ -11,6 +11,7 @@ class Role(StrEnum):
 class Permission(StrEnum):
     SHOP_READ = "shop.read"
     SHOP_UPDATE = "shop.update"
+    SHOP_MEDIA_MANAGE = "shop.media.manage"
 
     STAFF_READ = "staff.read"
     STAFF_CREATE = "staff.create"
@@ -46,6 +47,7 @@ ROLE_PERMISSIONS: dict[Role, set[Permission]] = {
     Role.OWNER: {
         Permission.SHOP_READ,
         Permission.SHOP_UPDATE,
+        Permission.SHOP_MEDIA_MANAGE,
         Permission.STAFF_READ,
         Permission.STAFF_CREATE,
         Permission.STAFF_UPDATE,
@@ -67,10 +69,13 @@ ROLE_PERMISSIONS: dict[Role, set[Permission]] = {
     },
     Role.MANAGER: {
         Permission.SHOP_READ,
+        Permission.SHOP_MEDIA_MANAGE,
         Permission.STAFF_READ,
+        Permission.STAFF_MANAGE,
         Permission.SERVICES_READ,
         Permission.SERVICES_CREATE,
         Permission.SERVICES_UPDATE,
+        Permission.SERVICES_MANAGE,
         Permission.APPOINTMENTS_READ,
         Permission.APPOINTMENTS_CREATE,
         Permission.APPOINTMENTS_UPDATE,

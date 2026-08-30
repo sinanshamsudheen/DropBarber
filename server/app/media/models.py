@@ -56,6 +56,23 @@ class AppointmentMedia(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     media_type: Mapped[str] = mapped_column(Text, nullable=False)
 
 
+class ShopPhoto(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+    """Associates media with a shop's public photo gallery, shown on
+    discovery cards and the shop's profile."""
+
+    __tablename__ = "shop_photos"
+    __table_args__ = (
+        UniqueConstraint("shop_id", "media_asset_id", name="uq_shop_photos_shop_id_media_asset_id"),
+    )
+
+    shop_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("shops.id", ondelete="CASCADE"), nullable=False
+    )
+    media_asset_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("media_assets.id"), nullable=False
+    )
+
+
 class CustomerPreferenceMedia(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     """A customer-level saved reference/preference image — distinct from an
     appointment-specific reference.

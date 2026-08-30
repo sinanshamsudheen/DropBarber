@@ -3,7 +3,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Compass, LocateFixed, Map, Rows3, Store } from "lucide-react";
 import { useState } from "react";
 import { ShopCard } from "@/components/cards/shop-card";
-import { EmptyState, ErrorState, GridSkeleton } from "@/components/common/states";
+import {
+  EmptyState,
+  ErrorState,
+  GridSkeleton,
+} from "@/components/common/states";
 import { CustomerShell } from "@/components/layout/customer-shell";
 import { ShopSearchBar } from "@/components/search/shop-search-bar";
 import { Button } from "@/components/ui/button";
@@ -17,8 +21,17 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Slider } from "@/components/ui/slider";
-import { listShops, nextAvailable, startingPrice } from "@/lib/api";
+import { useDiscoveryEnrichments } from "@/hooks/discovery-enrichment";
+import { listShopsApiV1ShopsGetQueryOptions } from "@/lib/api/generated/hooks/useListShopsApiV1ShopsGet";
+import { getErrorMessage } from "@/lib/api-client";
+import { mapShop } from "@/lib/domain-mappers";
 import { cn } from "@/lib/utils";
+
+// A fixed reference point used only until the frontend wires real browser
+// geolocation — keeps discovery's distance-based sort/filter meaningful
+// without inventing a geolocation feature.
+const DEFAULT_LATITUDE = 12.9716;
+const DEFAULT_LONGITUDE = 77.5946;
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -32,7 +45,8 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Drop — Book a barber near you" },
       {
         property: "og:description",
-        content: "Discover local barber shops, pick your barber and book an available slot.",
+        content:
+          "Discover local barber shops, pick your barber and book an available slot.",
       },
     ],
   }),
@@ -57,23 +71,30 @@ function DiscoverPage() {
   const [minRating, setMinRating] = useState(0);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const shopsQuery = useQuery({
-    queryKey: ["shops", query, location],
-    queryFn: async () => {
-      const list = await listShops({ query, location });
-      return Promise.all(
-        list.map(async (shop) => ({
-          shop,
-          fromPrice: startingPrice(shop.id),
-          next: await nextAvailable(shop.id),
-        })),
-      );
-    },
-  });
-
-  const results = (shopsQuery.data ?? []).filter(
-    (r) => r.shop.distanceKm <= maxDistance && r.shop.rating >= minRating,
+  const shopsQuery = useQuery(
+    listShopsApiV1ShopsGetQueryOptions({
+      query: {
+        latitude: DEFAULT_LATITUDE,
+        longitude: DEFAULT_LONGITUDE,
+        radius_km: 50,
+        service: query.trim() || null,
+      },
+    }),
   );
+  const shops = (shopsQuery.data?.data ?? [])
+    .map(mapShop)
+    .sort((a, b) => a.distanceKm - b.distanceKm);
+  const enrichments = useDiscoveryEnrichments(shops.map((s) => s.id));
+
+  const results = shops
+    .map((shop, i) => ({
+      shop,
+      fromPrice: enrichments[i]?.data?.fromPrice ?? null,
+      next: enrichments[i]?.data?.next ?? null,
+    }))
+    .filter(
+      (r) => r.shop.distanceKm <= maxDistance && r.shop.rating >= minRating,
+    );
 
   const requestLocation = () => {
     setLocationState("requesting");
@@ -109,7 +130,11 @@ function DiscoverPage() {
       {/* Category strip: quick rating tabs left, view toggle right. */}
       <div className="border-b border-hairline">
         <div className="page flex items-center gap-3 overflow-x-auto sm:gap-6">
-          <div role="tablist" aria-label="Filter by rating" className="flex shrink-0 gap-8">
+          <div
+            role="tablist"
+            aria-label="Filter by rating"
+            className="flex shrink-0 gap-8"
+          >
             {RATING_TABS.map((tab) => {
               const active = minRating === tab.value;
               return (
@@ -168,7 +193,9 @@ function DiscoverPage() {
       </div>
 
       <div className="page pb-12 pt-6 sm:pb-16 sm:pt-8">
-        <h1 className="type-display-xl text-ink">Barbers in {location || DEFAULT_AREA}</h1>
+        <h1 className="type-display-xl text-ink">
+          Barbers in {location || DEFAULT_AREA}
+        </h1>
 
         {locationState === "denied" && (
           <p className="mt-4 rounded-md border border-hairline bg-surface-soft px-4 py-3 text-sm text-body">
@@ -180,10 +207,14 @@ function DiscoverPage() {
           <div className="mt-6 overflow-hidden rounded-md border border-hairline">
             <div className="grid h-72 place-items-center bg-surface-soft">
               <div className="text-center">
-                <Compass className="mx-auto size-6 text-muted-foreground" aria-hidden />
+                <Compass
+                  className="mx-auto size-6 text-muted-foreground"
+                  aria-hidden
+                />
                 <p className="type-title-md mt-3 text-ink">Map view</p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Pins connect to the maps provider once the backend supplies coordinates.
+                  Pins connect to the maps provider once the backend supplies
+                  coordinates.
                 </p>
               </div>
             </div>
@@ -196,7 +227,7 @@ function DiscoverPage() {
           {shopsQuery.isError && (
             <ErrorState
               title="Search failed"
-              message={(shopsQuery.error as Error).message}
+              message={getErrorMessage(shopsQuery.error)}
               onRetry={() => void shopsQuery.refetch()}
             />
           )}
@@ -221,7 +252,12 @@ function DiscoverPage() {
               </p>
               <div className="grid gap-x-4 gap-y-6 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-10 lg:grid-cols-3 xl:grid-cols-4">
                 {results.map((r) => (
-                  <ShopCard key={r.shop.id} shop={r.shop} fromPrice={r.fromPrice} next={r.next} />
+                  <ShopCard
+                    key={r.shop.id}
+                    shop={r.shop}
+                    fromPrice={r.fromPrice}
+                    next={r.next}
+                  />
                 ))}
               </div>
             </>
@@ -258,7 +294,9 @@ function DiscoverPage() {
               />
             </div>
             <div>
-              <p className="text-sm font-medium text-ink">Within {maxDistance} km</p>
+              <p className="text-sm font-medium text-ink">
+                Within {maxDistance} km
+              </p>
               <Slider
                 className="mt-4"
                 value={[maxDistance]}
@@ -290,7 +328,9 @@ function DiscoverPage() {
               <Button variant="link" className="px-0" onClick={clearFilters}>
                 Clear all
               </Button>
-              <Button onClick={() => setSheetOpen(false)}>Show {results.length} shops</Button>
+              <Button onClick={() => setSheetOpen(false)}>
+                Show {results.length} shops
+              </Button>
             </div>
           </div>
         </SheetContent>

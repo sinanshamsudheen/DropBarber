@@ -1,6 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Clock, MapPin, Phone, Scissors, Star, Users } from "lucide-react";
+import {
+  ArrowLeft,
+  Clock,
+  MapPin,
+  Phone,
+  Scissors,
+  Star,
+  Users,
+} from "lucide-react";
 import { BarberAvatar } from "@/components/cards/barber-card";
 import { ReviewCard } from "@/components/cards/review-card";
 import { ServiceCard } from "@/components/cards/service-card";
@@ -9,7 +16,9 @@ import { ErrorState, ListSkeleton } from "@/components/common/states";
 import { CustomerShell } from "@/components/layout/customer-shell";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getShop, nextAvailable, startingPrice } from "@/lib/api";
+import { useShopDiscoveryEnrichment } from "@/hooks/discovery-enrichment";
+import { useShopProfile } from "@/hooks/use-shop-profile";
+import { getErrorMessage } from "@/lib/api-client";
 import { DAY_NAMES, dayLabel, duration, money, timeLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +28,8 @@ export const Route = createFileRoute("/shops/$shopId/")({
       { title: "Barber shop profile — Drop" },
       {
         name: "description",
-        content: "See services, barbers, prices, opening hours and reviews, then book.",
+        content:
+          "See services, barbers, prices, opening hours and reviews, then book.",
       },
       { property: "og:title", content: "Barber shop profile — Drop" },
       {
@@ -38,19 +48,17 @@ function ShopProfile() {
   const { shopId } = Route.useParams();
   const navigate = useNavigate();
 
-  const shopQuery = useQuery({
-    queryKey: ["shop", shopId],
-    queryFn: () => getShop(shopId),
-  });
-  const nextQuery = useQuery({
-    queryKey: ["next", shopId],
-    queryFn: () => nextAvailable(shopId),
-  });
+  const shopQuery = useShopProfile(shopId);
+  const enrichmentQuery = useShopDiscoveryEnrichment(shopId);
 
   if (shopQuery.isPending) {
     return (
       <CustomerShell>
-        <div className="page-narrow space-y-6 pt-8 sm:pt-10" aria-busy="true" aria-live="polite">
+        <div
+          className="page-narrow space-y-6 pt-8 sm:pt-10"
+          aria-busy="true"
+          aria-live="polite"
+        >
           <Skeleton className="h-8 w-2/3" />
           <Skeleton className="h-64 w-full rounded-md sm:h-[420px]" />
           <ListSkeleton rows={3} />
@@ -59,12 +67,12 @@ function ShopProfile() {
     );
   }
 
-  if (shopQuery.isError) {
+  if (shopQuery.isError || !shopQuery.data) {
     return (
       <CustomerShell>
         <div className="page-narrow pt-8 sm:pt-10">
           <ErrorState
-            message={(shopQuery.error as Error).message}
+            message={getErrorMessage(shopQuery.error)}
             onRetry={() => void shopQuery.refetch()}
           />
         </div>
@@ -76,7 +84,8 @@ function ShopProfile() {
   const activeServices = services.filter((s) => s.active);
   const activeBarbers = barbers.filter((b) => b.active);
   const today = new Date().getDay();
-  const fromPrice = startingPrice(shopId);
+  const fromPrice = enrichmentQuery.data?.fromPrice ?? null;
+  const next = enrichmentQuery.data?.next ?? null;
   const openToday = shop.hours[today]?.open;
   const secondaryPhotos = shop.photos.slice(1, 5);
 
@@ -137,13 +146,19 @@ function ShopProfile() {
             </h2>
             <ul className="mt-4 space-y-3 text-base text-body">
               <li className="flex items-start gap-3">
-                <MapPin className="mt-0.5 size-5 shrink-0 text-ink" aria-hidden />
+                <MapPin
+                  className="mt-0.5 size-5 shrink-0 text-ink"
+                  aria-hidden
+                />
                 <span>
                   {shop.address} · {shop.distanceKm} km away
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <Clock className="mt-0.5 size-5 shrink-0 text-ink" aria-hidden />
+                <Clock
+                  className="mt-0.5 size-5 shrink-0 text-ink"
+                  aria-hidden
+                />
                 <span>
                   {openToday
                     ? `Open today ${timeLabel(openToday)} – ${timeLabel(shop.hours[today]!.close!)}`
@@ -151,15 +166,21 @@ function ShopProfile() {
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <Phone className="mt-0.5 size-5 shrink-0 text-ink" aria-hidden />
+                <Phone
+                  className="mt-0.5 size-5 shrink-0 text-ink"
+                  aria-hidden
+                />
                 <span>{shop.phone}</span>
               </li>
-              {nextQuery.data && (
+              {next && (
                 <li className="flex items-start gap-3 font-medium text-ink">
-                  <Star className="mt-0.5 size-5 shrink-0 text-ink" aria-hidden />
+                  <Star
+                    className="mt-0.5 size-5 shrink-0 text-ink"
+                    aria-hidden
+                  />
                   <span>
-                    Next available {dayLabel(nextQuery.data.date)} at{" "}
-                    {timeLabel(nextQuery.data.time)}
+                    Next available {dayLabel(next.date)} at{" "}
+                    {timeLabel(next.time)}
                   </span>
                 </li>
               )}
@@ -168,10 +189,15 @@ function ShopProfile() {
 
           <section className="border-b border-hairline py-6 sm:py-8">
             <h2 className="type-display-md text-ink">About this shop</h2>
-            <p className="mt-4 text-base leading-relaxed text-body">{shop.description}</p>
+            <p className="mt-4 text-base leading-relaxed text-body">
+              {shop.description}
+            </p>
           </section>
 
-          <section id="services" className="border-b border-hairline py-6 sm:py-8">
+          <section
+            id="services"
+            className="border-b border-hairline py-6 sm:py-8"
+          >
             <h2 className="type-display-md text-ink">What this shop offers</h2>
             <div className="mt-5 space-y-3">
               {activeServices.map((service) => (
@@ -190,8 +216,9 @@ function ShopProfile() {
               ))}
             </div>
             <p className="mt-4 text-sm text-muted-foreground">
-              Prices shown are the shop's standard price. Each barber sets their own timing per
-              service — you'll see the exact duration when you pick a barber.
+              Prices shown are the shop's standard price. Each barber sets their
+              own timing per service — you'll see the exact duration when you
+              pick a barber.
             </p>
           </section>
 
@@ -207,12 +234,20 @@ function ShopProfile() {
                 >
                   <BarberAvatar barber={barber} />
                   <div className="min-w-0 flex-1">
-                    <p className="type-title-md truncate text-ink">{barber.name}</p>
-                    <p className="line-clamp-1 text-sm text-muted-foreground">{barber.bio}</p>
+                    <p className="type-title-md truncate text-ink">
+                      {barber.name}
+                    </p>
+                    <p className="line-clamp-1 text-sm text-muted-foreground">
+                      {barber.bio}
+                    </p>
                     <div className="mt-1.5 flex items-center gap-3">
-                      <Rating value={barber.rating} count={barber.reviewCount} />
+                      <Rating
+                        value={barber.rating}
+                        count={barber.reviewCount}
+                      />
                       <span className="text-sm text-muted-foreground">
-                        {barber.services.filter((s) => s.active).length} services
+                        {barber.services.filter((s) => s.active).length}{" "}
+                        services
                       </span>
                     </div>
                   </div>
@@ -233,8 +268,12 @@ function ShopProfile() {
                   )}
                 >
                   <span>{DAY_NAMES[h.day]}</span>
-                  <span className={h.day === today ? "" : "text-muted-foreground"}>
-                    {h.open ? `${timeLabel(h.open)} – ${timeLabel(h.close!)}` : "Closed"}
+                  <span
+                    className={h.day === today ? "" : "text-muted-foreground"}
+                  >
+                    {h.open
+                      ? `${timeLabel(h.open)} – ${timeLabel(h.close!)}`
+                      : "Closed"}
                   </span>
                 </li>
               ))}
@@ -246,7 +285,9 @@ function ShopProfile() {
               <div className="flex flex-col items-center pb-8">
                 <RatingDisplay
                   value={shop.rating}
-                  {...(shop.rating >= FAVOURITE_RATING ? { caption: "Guest favourite" } : {})}
+                  {...(shop.rating >= FAVOURITE_RATING
+                    ? { caption: "Guest favourite" }
+                    : {})}
                 />
                 <p className="mt-2 max-w-sm text-center text-sm text-muted-foreground">
                   {shop.rating >= FAVOURITE_RATING
@@ -261,7 +302,8 @@ function ShopProfile() {
             </h2>
             {reviews.length === 0 ? (
               <p className="mt-5 rounded-md border border-dashed border-hairline p-8 text-center text-base text-muted-foreground">
-                No reviews yet. Reviews appear here after a completed appointment.
+                No reviews yet. Reviews appear here after a completed
+                appointment.
               </p>
             ) : (
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -281,7 +323,9 @@ function ShopProfile() {
         <aside className="hidden lg:block">
           <div className="sticky top-28 rounded-md border border-hairline bg-card p-6 shadow-float">
             <p className="text-ink">
-              <span className="type-display-md">{fromPrice !== null ? money(fromPrice) : "—"}</span>{" "}
+              <span className="type-display-md">
+                {fromPrice !== null ? money(fromPrice) : "—"}
+              </span>{" "}
               <span className="text-base text-muted-foreground">from</span>
             </p>
 
@@ -298,14 +342,18 @@ function ShopProfile() {
               </div>
               <div className="flex items-center gap-2 text-body">
                 <Clock className="size-4 shrink-0 text-ink" aria-hidden />
-                {nextQuery.data
-                  ? `Next free ${dayLabel(nextQuery.data.date)} at ${timeLabel(nextQuery.data.time)}`
+                {next
+                  ? `Next free ${dayLabel(next.date)} at ${timeLabel(next.time)}`
                   : "No slots in the next 7 days"}
               </div>
             </div>
 
             <Button asChild className="mt-6 w-full">
-              <Link to="/shops/$shopId/book" params={{ shopId }} search={{ step: 1 }}>
+              <Link
+                to="/shops/$shopId/book"
+                params={{ shopId }}
+                search={{ step: 1 }}
+              >
                 Book an appointment
               </Link>
             </Button>
@@ -320,7 +368,9 @@ function ShopProfile() {
                 <dd>{fromPrice !== null ? money(fromPrice) : "—"}</dd>
               </div>
               <div className="flex justify-between text-body">
-                <dt className="underline underline-offset-2">Typical duration</dt>
+                <dt className="underline underline-offset-2">
+                  Typical duration
+                </dt>
                 <dd>{duration(30)}</dd>
               </div>
               <div className="flex justify-between border-t border-hairline pt-3 font-semibold text-ink">
@@ -337,15 +387,21 @@ function ShopProfile() {
         <div className="mx-auto flex max-w-2xl items-center gap-4">
           <div className="min-w-0 flex-1">
             <p className="truncate text-base text-ink">
-              <span className="font-semibold">{fromPrice !== null ? money(fromPrice) : "—"}</span>{" "}
+              <span className="font-semibold">
+                {fromPrice !== null ? money(fromPrice) : "—"}
+              </span>{" "}
               <span className="text-sm text-muted-foreground">from</span>
             </p>
             <p className="truncate text-sm text-muted-foreground">
-              {nextQuery.data ? `Next free ${dayLabel(nextQuery.data.date)}` : "No slots this week"}
+              {next ? `Next free ${dayLabel(next.date)}` : "No slots this week"}
             </p>
           </div>
           <Button asChild className="shrink-0">
-            <Link to="/shops/$shopId/book" params={{ shopId }} search={{ step: 1 }}>
+            <Link
+              to="/shops/$shopId/book"
+              params={{ shopId }}
+              search={{ step: 1 }}
+            >
               Book
             </Link>
           </Button>

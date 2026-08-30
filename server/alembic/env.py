@@ -13,7 +13,12 @@ from app.availability.models import BarberTimeOff, BarberWorkingHours  # noqa: F
 from app.core.config import get_settings
 from app.customers.models import CustomerProfile, ShopCustomer  # noqa: F401
 from app.db.base import Base
-from app.media.models import AppointmentMedia, CustomerPreferenceMedia, MediaAsset  # noqa: F401
+from app.media.models import (  # noqa: F401
+    AppointmentMedia,
+    CustomerPreferenceMedia,
+    MediaAsset,
+    ShopPhoto,
+)
 from app.points.models import BarberPoint  # noqa: F401
 from app.reviews.models import Review  # noqa: F401
 from app.services.models import BarberService, Service  # noqa: F401

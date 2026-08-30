@@ -4,7 +4,10 @@ import { CalendarOff, Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ErrorState, ListSkeleton } from "@/components/common/states";
-import { ManageHeader, RequirePermission } from "@/components/layout/manage-shell";
+import {
+  ManageHeader,
+  RequirePermission,
+} from "@/components/layout/manage-shell";
 import {
   BarberSchedule,
   scheduleProblem,
@@ -20,7 +23,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { addTimeOff, listBarbers, removeTimeOff, setBarberSchedule } from "@/lib/api";
+import { useBarberSchedule } from "@/hooks/use-barber-schedule";
+import { useShopBarbers } from "@/hooks/use-shop-barbers";
+import { createTimeOffApiV1ShopsShopIdBarbersBarberIdTimeOffPost } from "@/lib/api/generated/clients/createTimeOffApiV1ShopsShopIdBarbersBarberIdTimeOffPost";
+import { deleteTimeOffApiV1ShopsShopIdBarbersBarberIdTimeOffTimeOffIdDelete } from "@/lib/api/generated/clients/deleteTimeOffApiV1ShopsShopIdBarbersBarberIdTimeOffTimeOffIdDelete";
+import { setWorkingHoursApiV1ShopsShopIdBarbersBarberIdWorkingHoursPut } from "@/lib/api/generated/clients/setWorkingHoursApiV1ShopsShopIdBarbersBarberIdWorkingHoursPut";
+import { getScheduleApiV1ShopsShopIdBarbersBarberIdScheduleGetQueryKey } from "@/lib/api/generated/hooks/useGetScheduleApiV1ShopsShopIdBarbersBarberIdScheduleGet";
+import { listShopBarbersApiV1ShopsShopIdBarbersGetQueryKey } from "@/lib/api/generated/hooks/useListShopBarbersApiV1ShopsShopIdBarbersGet";
+import { getErrorMessage } from "@/lib/api-client";
+import { frontendDayToBackend } from "@/lib/domain-mappers";
 import { longDate, todayISO } from "@/lib/format";
 import { useSession } from "@/lib/session";
 
@@ -30,7 +41,9 @@ interface ScheduleSearch {
 
 export const Route = createFileRoute("/manage/$shopId/schedule")({
   validateSearch: (search: Record<string, unknown>): ScheduleSearch =>
-    typeof search["barberId"] === "string" ? { barberId: search["barberId"] } : {},
+    typeof search["barberId"] === "string"
+      ? { barberId: search["barberId"] }
+      : {},
   component: ScheduleRoute,
 });
 
@@ -51,59 +64,103 @@ function SchedulePage() {
   const { membershipFor } = useSession();
   const ownBarberId = membershipFor(shopId)?.barberId;
 
-  const q = useQuery({
-    queryKey: ["barbers", shopId],
-    queryFn: () => listBarbers(shopId),
-  });
+  const q = useShopBarbers(shopId);
 
   // A barber manages only their own hours; owners and managers pick anyone.
-  const rows = (q.data ?? []).filter((r) => !ownBarberId || r.barber.id === ownBarberId);
+  const rows = (q.data ?? []).filter(
+    (r) => !ownBarberId || r.barber.id === ownBarberId,
+  );
   const selectedId = ownBarberId ?? search.barberId ?? rows[0]?.barber.id;
   const barber = rows.find((r) => r.barber.id === selectedId)?.barber ?? null;
+
+  const scheduleQuery = useBarberSchedule(shopId, selectedId);
+  const timeOff = scheduleQuery.data?.timeOff ?? [];
 
   const [draft, setDraft] = useState<WeekSchedule | null>(null);
   const [offDate, setOffDate] = useState("");
   const [offReason, setOffReason] = useState("");
 
   useEffect(() => {
-    setDraft(barber ? barber.schedule.map((day) => day.map((p) => ({ ...p }))) : null);
-  }, [barber]);
+    setDraft(
+      scheduleQuery.data
+        ? scheduleQuery.data.schedule.map((day) => day.map((p) => ({ ...p })))
+        : null,
+    );
+  }, [scheduleQuery.data]);
+
+  const invalidateSchedule = () =>
+    queryClient.invalidateQueries({
+      queryKey: getScheduleApiV1ShopsShopIdBarbersBarberIdScheduleGetQueryKey({
+        path: { shop_id: shopId, barber_id: selectedId ?? "" },
+      }),
+    });
 
   const saveHours = useMutation({
-    mutationFn: (next: WeekSchedule) => setBarberSchedule(selectedId!, next),
-    onSuccess: () => {
-      toast.success("Working hours saved");
-      void queryClient.invalidateQueries({ queryKey: ["barbers", shopId] });
-      void queryClient.invalidateQueries({
-        queryKey: ["managed-barber", shopId],
+    mutationFn: (next: WeekSchedule) => {
+      const periods = next.flatMap((dayPeriods, frontendDay) =>
+        dayPeriods.map((p) => ({
+          day_of_week: frontendDayToBackend(frontendDay),
+          start_time: `${p.start}:00`,
+          end_time: `${p.end}:00`,
+          is_active: true,
+        })),
+      );
+      return setWorkingHoursApiV1ShopsShopIdBarbersBarberIdWorkingHoursPut({
+        path: { shop_id: shopId, barber_id: selectedId! },
+        body: periods,
       });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onSuccess: () => {
+      toast.success("Working hours saved");
+      void queryClient.invalidateQueries({
+        queryKey: listShopBarbersApiV1ShopsShopIdBarbersGetQueryKey({
+          path: { shop_id: shopId },
+        }),
+      });
+      void invalidateSchedule();
+    },
+    onError: (e: unknown) => toast.error(getErrorMessage(e)),
   });
 
   const createTimeOff = useMutation({
-    mutationFn: () => addTimeOff(selectedId!, offDate, offReason.trim() || "Time off"),
+    mutationFn: () =>
+      createTimeOffApiV1ShopsShopIdBarbersBarberIdTimeOffPost({
+        path: { shop_id: shopId, barber_id: selectedId! },
+        body: {
+          start_at: `${offDate}T00:00:00Z`,
+          end_at: `${offDate}T23:59:59Z`,
+          reason: offReason.trim() || "Time off",
+        },
+      }),
     onSuccess: () => {
       setOffDate("");
       setOffReason("");
       toast.success("Time off added — those slots are now unavailable");
-      void queryClient.invalidateQueries({ queryKey: ["barbers", shopId] });
+      void invalidateSchedule();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: unknown) => toast.error(getErrorMessage(e)),
   });
 
   const deleteTimeOff = useMutation({
-    mutationFn: (id: string) => removeTimeOff(selectedId!, id),
+    mutationFn: (id: string) =>
+      deleteTimeOffApiV1ShopsShopIdBarbersBarberIdTimeOffTimeOffIdDelete({
+        path: { shop_id: shopId, barber_id: selectedId!, time_off_id: id },
+      }),
     onSuccess: () => {
       toast.success("Time off removed");
-      void queryClient.invalidateQueries({ queryKey: ["barbers", shopId] });
+      void invalidateSchedule();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: unknown) => toast.error(getErrorMessage(e)),
   });
 
   if (q.isPending) return <ListSkeleton rows={4} />;
   if (q.isError)
-    return <ErrorState message={(q.error as Error).message} onRetry={() => void q.refetch()} />;
+    return (
+      <ErrorState
+        message={getErrorMessage(q.error)}
+        onRetry={() => void q.refetch()}
+      />
+    );
 
   const problem = draft ? scheduleProblem(draft) : null;
 
@@ -145,9 +202,12 @@ function SchedulePage() {
       ) : (
         <div className="mt-5 space-y-6">
           <section>
-            <h2 className="text-base font-semibold">Weekly hours for {barber.name}</h2>
+            <h2 className="text-base font-semibold">
+              Weekly hours for {barber.name}
+            </h2>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              Add a second period on a day to leave a lunch break out of the booking grid.
+              Add a second period on a day to leave a lunch break out of the
+              booking grid.
             </p>
             <div className="mt-3">
               <BarberSchedule schedule={draft} onChange={setDraft} />
@@ -207,13 +267,14 @@ function SchedulePage() {
               </Button>
             </div>
 
-            {barber.timeOff.length === 0 ? (
+            {timeOff.length === 0 ? (
               <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-                <CalendarOff className="size-4" aria-hidden /> No time off booked.
+                <CalendarOff className="size-4" aria-hidden /> No time off
+                booked.
               </p>
             ) : (
               <ul className="mt-3 space-y-2">
-                {[...barber.timeOff]
+                {[...timeOff]
                   .sort((a, b) => a.date.localeCompare(b.date))
                   .map((t) => (
                     <li
@@ -221,8 +282,12 @@ function SchedulePage() {
                       className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-sm border border-hairline bg-card p-3"
                     >
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{longDate(t.date)}</p>
-                        <p className="truncate text-sm text-muted-foreground">{t.reason}</p>
+                        <p className="truncate text-sm font-medium">
+                          {longDate(t.date)}
+                        </p>
+                        <p className="truncate text-sm text-muted-foreground">
+                          {t.reason}
+                        </p>
                       </div>
                       <Button
                         size="icon"

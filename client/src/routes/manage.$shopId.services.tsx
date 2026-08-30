@@ -3,8 +3,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Pencil, Plus, Store } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { EmptyState, ErrorState, ListSkeleton } from "@/components/common/states";
-import { ManageHeader, RequirePermission } from "@/components/layout/manage-shell";
+import {
+  EmptyState,
+  ErrorState,
+  ListSkeleton,
+} from "@/components/common/states";
+import {
+  ManageHeader,
+  RequirePermission,
+} from "@/components/layout/manage-shell";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,7 +25,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { listServices, saveService } from "@/lib/api";
+import { createServiceApiV1ShopsShopIdServicesPost } from "@/lib/api/generated/clients/createServiceApiV1ShopsShopIdServicesPost";
+import { updateServiceApiV1ShopsShopIdServicesServiceIdPatch } from "@/lib/api/generated/clients/updateServiceApiV1ShopsShopIdServicesServiceIdPatch";
+import {
+  listServicesManageApiV1ShopsShopIdServicesManageGetQueryKey,
+  listServicesManageApiV1ShopsShopIdServicesManageGetQueryOptions,
+} from "@/lib/api/generated/hooks/useListServicesManageApiV1ShopsShopIdServicesManageGet";
+import { getErrorMessage } from "@/lib/api-client";
+import { mapService } from "@/lib/domain-mappers";
 import { money } from "@/lib/format";
 import type { Service } from "@/lib/types";
 
@@ -41,21 +55,36 @@ function ServicesPage() {
   const [editing, setEditing] = useState<Service | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const q = useQuery({
-    queryKey: ["services", shopId],
-    queryFn: () => listServices(shopId),
-  });
+  const listQuery = useQuery(
+    listServicesManageApiV1ShopsShopIdServicesManageGetQueryOptions({
+      path: { shop_id: shopId },
+    }),
+  );
+  const q = {
+    ...listQuery,
+    data: listQuery.data?.data.map((s) => mapService(s, shopId)),
+  };
 
   const toggle = useMutation({
-    mutationFn: (service: Service) =>
-      saveService(shopId, { id: service.id, active: !service.active }),
+    mutationFn: async (service: Service) => {
+      const { data } =
+        await updateServiceApiV1ShopsShopIdServicesServiceIdPatch({
+          path: { shop_id: shopId, service_id: service.id },
+          body: { status: service.active ? "inactive" : "active" },
+        });
+      return mapService(data.data, shopId);
+    },
     onSuccess: (service) => {
       toast.success(
         `${service.name} ${service.active ? "is bookable again" : "is no longer bookable"}`,
       );
-      void queryClient.invalidateQueries({ queryKey: ["services", shopId] });
+      void queryClient.invalidateQueries({
+        queryKey: listServicesManageApiV1ShopsShopIdServicesManageGetQueryKey({
+          path: { shop_id: shopId },
+        }),
+      });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: unknown) => toast.error(getErrorMessage(e)),
   });
 
   const openNew = () => {
@@ -89,9 +118,12 @@ function ServicesPage() {
 
       {q.isPending && <ListSkeleton rows={4} />}
       {q.isError && (
-        <ErrorState message={(q.error as Error).message} onRetry={() => void q.refetch()} />
+        <ErrorState
+          message={getErrorMessage(q.error)}
+          onRetry={() => void q.refetch()}
+        />
       )}
-      {q.isSuccess && q.data.length === 0 && (
+      {q.data?.length === 0 && (
         <EmptyState
           icon={Store}
           title="No services yet"
@@ -102,7 +134,10 @@ function ServicesPage() {
 
       <ul className="space-y-2">
         {q.data?.map((service) => (
-          <li key={service.id} className="rounded-md border border-hairline bg-card p-4">
+          <li
+            key={service.id}
+            className="rounded-md border border-hairline bg-card p-4"
+          >
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">{service.name}</p>
@@ -110,7 +145,9 @@ function ServicesPage() {
                   {service.description}
                 </p>
               </div>
-              <span className="shrink-0 text-sm font-semibold">{money(service.price)}</span>
+              <span className="shrink-0 text-sm font-semibold">
+                {money(service.price)}
+              </span>
             </div>
             <div className="mt-3 flex items-center justify-between gap-3 border-t border-hairline pt-3">
               <div className="flex items-center gap-2">
@@ -127,7 +164,11 @@ function ServicesPage() {
                   {service.active ? "Bookable" : "Hidden from customers"}
                 </label>
               </div>
-              <Button size="sm" variant="ghost" onClick={() => openEdit(service)}>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => openEdit(service)}
+              >
                 <Pencil className="size-4" aria-hidden /> Edit
               </Button>
             </div>
@@ -164,19 +205,38 @@ function ServiceFormDialog({
   }, [open, service]);
 
   const save = useMutation({
-    mutationFn: () =>
-      saveService(shopId, {
-        ...(service ? { id: service.id } : {}),
-        name: name.trim(),
-        description: description.trim(),
-        price: Number(price) || 0,
-      }),
+    mutationFn: async () => {
+      if (service) {
+        await updateServiceApiV1ShopsShopIdServicesServiceIdPatch({
+          path: { shop_id: shopId, service_id: service.id },
+          body: {
+            name: name.trim(),
+            description: description.trim() || null,
+            price: Number(price) || 0,
+          },
+        });
+      } else {
+        await createServiceApiV1ShopsShopIdServicesPost({
+          path: { shop_id: shopId },
+          body: {
+            name: name.trim(),
+            description: description.trim() || null,
+            price: Number(price) || 0,
+            currency: "USD",
+          },
+        });
+      }
+    },
     onSuccess: () => {
       toast.success(service ? "Service updated" : "Service added");
-      void queryClient.invalidateQueries({ queryKey: ["services", shopId] });
+      void queryClient.invalidateQueries({
+        queryKey: listServicesManageApiV1ShopsShopIdServicesManageGetQueryKey({
+          path: { shop_id: shopId },
+        }),
+      });
       onOpenChange(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: unknown) => toast.error(getErrorMessage(e)),
   });
 
   const submit = (e: React.FormEvent) => {
@@ -193,9 +253,12 @@ function ServiceFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{service ? `Edit ${service.name}` : "Add a service"}</DialogTitle>
+          <DialogTitle>
+            {service ? `Edit ${service.name}` : "Add a service"}
+          </DialogTitle>
           <DialogDescription>
-            Set the shop price here. Individual barbers can take longer or charge differently.
+            Set the shop price here. Individual barbers can take longer or
+            charge differently.
           </DialogDescription>
         </DialogHeader>
 
@@ -212,7 +275,11 @@ function ServiceFormDialog({
               aria-describedby={error ? "service-name-error" : undefined}
             />
             {error && (
-              <p id="service-name-error" role="alert" className="mt-1.5 text-sm text-destructive">
+              <p
+                id="service-name-error"
+                role="alert"
+                className="mt-1.5 text-sm text-destructive"
+              >
                 {error}
               </p>
             )}
@@ -239,11 +306,19 @@ function ServiceFormDialog({
           </div>
 
           <DialogFooter className="gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={save.isPending}>
-              {save.isPending ? "Saving…" : service ? "Save changes" : "Add service"}
+              {save.isPending
+                ? "Saving…"
+                : service
+                  ? "Save changes"
+                  : "Add service"}
             </Button>
           </DialogFooter>
         </form>

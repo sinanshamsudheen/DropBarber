@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { submitReview } from "@/lib/api";
+import { createReviewApiV1AppointmentsAppointmentIdReviewPost } from "@/lib/api/generated/clients/createReviewApiV1AppointmentsAppointmentIdReviewPost";
+import { getErrorMessage } from "@/lib/api-client";
 
 export function ReviewDialog({
   appointmentId,
@@ -36,11 +37,9 @@ export function ReviewDialog({
 
   const mutation = useMutation({
     mutationFn: () =>
-      submitReview({
-        appointmentId,
-        shopRating,
-        ...(barberRating ? { barberRating } : {}),
-        text: text.trim(),
+      createReviewApiV1AppointmentsAppointmentIdReviewPost({
+        path: { appointment_id: appointmentId },
+        body: { rating: shopRating, review_text: text.trim() },
       }),
     onSuccess: () => {
       toast.success("Thanks for the review", {
@@ -49,7 +48,7 @@ export function ReviewDialog({
       void queryClient.invalidateQueries();
       setOpen(false);
     },
-    onError: (e: Error) => setError(e.message),
+    onError: (e: unknown) => setError(getErrorMessage(e)),
   });
 
   return (
@@ -57,7 +56,9 @@ export function ReviewDialog({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="type-display-sm">Review your visit</DialogTitle>
+          <DialogTitle className="type-display-sm">
+            Review your visit
+          </DialogTitle>
           <DialogDescription>
             Reviews are tied to a real completed appointment at {shopName}.
           </DialogDescription>
@@ -65,11 +66,21 @@ export function ReviewDialog({
         <div className="space-y-5">
           <div>
             <Label className="mb-1 block">How was the shop?</Label>
-            <StarInput value={shopRating} onChange={setShopRating} label="Shop rating" />
+            <StarInput
+              value={shopRating}
+              onChange={setShopRating}
+              label="Shop rating"
+            />
           </div>
           <div>
-            <Label className="mb-1 block">How was {barberName}? (optional)</Label>
-            <StarInput value={barberRating} onChange={setBarberRating} label="Barber rating" />
+            <Label className="mb-1 block">
+              How was {barberName}? (optional)
+            </Label>
+            <StarInput
+              value={barberRating}
+              onChange={setBarberRating}
+              label="Barber rating"
+            />
           </div>
           <div>
             <Label htmlFor="review-text">Your review</Label>

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, CalendarClock, MapPin, Star, Store } from "lucide-react";
 import { toast } from "sonner";
@@ -18,7 +18,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { cancelAppointment, getAppointment } from "@/lib/api";
+import { useAppointmentDetail } from "@/hooks/use-appointment-detail";
+import { cancelAppointmentApiV1AppointmentsAppointmentIdCancelPost } from "@/lib/api/generated/clients/cancelAppointmentApiV1AppointmentsAppointmentIdCancelPost";
+import { getErrorMessage } from "@/lib/api-client";
 import { duration, longDate, money, timeLabel } from "@/lib/format";
 
 export const Route = createFileRoute("/bookings/$appointmentId")({
@@ -27,7 +29,8 @@ export const Route = createFileRoute("/bookings/$appointmentId")({
       { title: "Appointment details — Drop" },
       {
         name: "description",
-        content: "Your appointment details, reference photos and completion record.",
+        content:
+          "Your appointment details, reference photos and completion record.",
       },
       { property: "og:title", content: "Appointment details — Drop" },
       {
@@ -43,18 +46,18 @@ function AppointmentDetail() {
   const { appointmentId } = Route.useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const q = useQuery({
-    queryKey: ["appointment", appointmentId],
-    queryFn: () => getAppointment(appointmentId),
-  });
+  const q = useAppointmentDetail(appointmentId);
 
   const cancel = useMutation({
-    mutationFn: () => cancelAppointment(appointmentId),
+    mutationFn: () =>
+      cancelAppointmentApiV1AppointmentsAppointmentIdCancelPost({
+        path: { appointment_id: appointmentId },
+      }),
     onSuccess: () => {
       toast.success("Appointment cancelled");
       void queryClient.invalidateQueries();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: unknown) => toast.error(getErrorMessage(e)),
   });
 
   if (q.isPending) {
@@ -70,7 +73,10 @@ function AppointmentDetail() {
     return (
       <CustomerShell>
         <div className="page-narrow pt-8 sm:pt-10">
-          <ErrorState message={(q.error as Error).message} onRetry={() => void q.refetch()} />
+          <ErrorState
+            message={getErrorMessage(q.error)}
+            onRetry={() => void q.refetch()}
+          />
         </div>
       </CustomerShell>
     );
@@ -94,7 +100,9 @@ function AppointmentDetail() {
 
         <div className="mt-6 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
           <div className="min-w-0">
-            <h1 className="type-display-lg truncate text-ink">{a.service.name}</h1>
+            <h1 className="type-display-lg truncate text-ink">
+              {a.service?.name ?? "Service"}
+            </h1>
             <p className="mt-1 text-base text-muted-foreground">
               {a.shop.name} · {a.barber.name}
             </p>
@@ -110,7 +118,11 @@ function AppointmentDetail() {
           />
           <Row icon={Star} label="Duration" value={duration(a.durationMin)} />
           <Row icon={MapPin} label="Where" value={a.shop.address} />
-          <Row icon={Store} label="Price" value={money(a.completion?.finalPrice ?? a.price)} />
+          <Row
+            icon={Store}
+            label="Price"
+            value={money(a.completion?.finalPrice ?? a.price)}
+          />
         </div>
 
         {a.note && (
@@ -148,7 +160,9 @@ function AppointmentDetail() {
             <dl className="mt-4 space-y-2 text-base">
               <div className="flex justify-between gap-4">
                 <dt className="text-muted-foreground">Service performed</dt>
-                <dd className="text-right font-medium text-ink">{a.completion.actualService}</dd>
+                <dd className="text-right font-medium text-ink">
+                  {a.completion.actualService}
+                </dd>
               </div>
               <div className="flex justify-between gap-4">
                 <dt className="text-muted-foreground">Final price</dt>
@@ -159,7 +173,9 @@ function AppointmentDetail() {
             </dl>
             {a.completion.finishedPhoto && (
               <div className="mt-5">
-                <p className="text-sm text-muted-foreground">Finished cut (shared with you only)</p>
+                <p className="text-sm text-muted-foreground">
+                  Finished cut (shared with you only)
+                </p>
                 <img
                   src={a.completion.finishedPhoto}
                   alt="Finished haircut"
@@ -177,7 +193,9 @@ function AppointmentDetail() {
               appointmentId={a.id}
               shopName={a.shop.name}
               barberName={a.barber.name}
-              trigger={<Button className="w-full sm:w-auto">Leave a review</Button>}
+              trigger={
+                <Button className="w-full sm:w-auto">Leave a review</Button>
+              }
             />
           )}
           {a.review && (
@@ -231,10 +249,12 @@ function AppointmentDetail() {
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Cancel this appointment?</AlertDialogTitle>
+                    <AlertDialogTitle>
+                      Cancel this appointment?
+                    </AlertDialogTitle>
                     <AlertDialogDescription>
-                      Your slot at {a.shop.name} on {longDate(a.date)} at {timeLabel(a.time)} will
-                      be released.
+                      Your slot at {a.shop.name} on {longDate(a.date)} at{" "}
+                      {timeLabel(a.time)} will be released.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -253,7 +273,15 @@ function AppointmentDetail() {
   );
 }
 
-function Row({ icon: Icon, label, value }: { icon: typeof MapPin; label: string; value: string }) {
+function Row({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof MapPin;
+  label: string;
+  value: string;
+}) {
   return (
     <div className="flex items-start gap-3 text-base">
       <Icon className="mt-0.5 size-4 shrink-0 text-ink" aria-hidden />

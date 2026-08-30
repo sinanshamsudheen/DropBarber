@@ -14,20 +14,22 @@ class AppError(Exception):
     status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR
     message: str = "An unexpected error occurred."
 
-    def __init__(self, message: str | None = None) -> None:
+    def __init__(self, message: str | None = None, code: str | None = None) -> None:
         if message is not None:
             self.message = message
+        if code is not None:
+            self.code = code
         super().__init__(self.message)
 
 
 class AuthenticationError(AppError):
-    code = "AUTHENTICATION_FAILED"
+    code = "UNAUTHORIZED"
     status_code = status.HTTP_401_UNAUTHORIZED
     message = "Authentication credentials are missing or invalid."
 
 
 class AuthorizationError(AppError):
-    code = "PERMISSION_DENIED"
+    code = "FORBIDDEN"
     status_code = status.HTTP_403_FORBIDDEN
     message = "You do not have permission to perform this action."
 
@@ -36,6 +38,18 @@ class NotFoundError(AppError):
     code = "NOT_FOUND"
     status_code = status.HTTP_404_NOT_FOUND
     message = "The requested resource was not found."
+
+
+class BadRequestError(AppError):
+    code = "BAD_REQUEST"
+    status_code = status.HTTP_400_BAD_REQUEST
+    message = "The request is invalid."
+
+
+class ConflictError(AppError):
+    code = "CONFLICT"
+    status_code = status.HTTP_409_CONFLICT
+    message = "The request conflicts with the current state of the resource."
 
 
 def _error_response(status_code: int, code: str, message: str) -> JSONResponse:

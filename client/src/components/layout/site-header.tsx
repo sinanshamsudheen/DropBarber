@@ -1,5 +1,13 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { CalendarCheck, Clock3, Compass, Menu, User } from "lucide-react";
+import {
+  CalendarCheck,
+  Clock3,
+  Compass,
+  Menu,
+  Store,
+  User,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { initials } from "@/components/cards/barber-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,7 +30,15 @@ import { cn } from "@/lib/utils";
  * 744px the tabs collapse into a sheet and the bottom nav takes over.
  */
 
-export const PRODUCT_TABS = [
+interface NavTab {
+  to: "/" | "/bookings" | "/history" | "/manage";
+  label: string;
+  icon: LucideIcon;
+  isNew: boolean;
+  match: (p: string) => boolean;
+}
+
+export const PRODUCT_TABS: NavTab[] = [
   {
     to: "/",
     label: "Shops",
@@ -44,7 +60,15 @@ export const PRODUCT_TABS = [
     isNew: true,
     match: (p: string) => p.startsWith("/history"),
   },
-] as const;
+];
+
+const MANAGE_TAB: NavTab = {
+  to: "/manage",
+  label: "Manage",
+  icon: Store,
+  isNew: false,
+  match: (p: string) => p.startsWith("/manage"),
+};
 
 export function Wordmark({ className }: { className?: string }) {
   return (
@@ -54,7 +78,7 @@ export function Wordmark({ className }: { className?: string }) {
   );
 }
 
-function ProductTab({ tab }: { tab: (typeof PRODUCT_TABS)[number] }) {
+function ProductTab({ tab }: { tab: NavTab }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const active = tab.match(pathname);
   return (
@@ -117,6 +141,7 @@ function AccountCluster() {
 
 function MobileMenu() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { user } = useSession();
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -131,6 +156,7 @@ function MobileMenu() {
         <nav className="mt-6 flex flex-col">
           {[
             ...PRODUCT_TABS,
+            ...(user?.memberships.length ? [MANAGE_TAB] : []),
             {
               to: "/profile",
               label: "Profile",
@@ -161,6 +187,10 @@ function MobileMenu() {
 }
 
 export function SiteHeader({ search }: { search?: ReactNode }) {
+  const { user } = useSession();
+  const tabs = user?.memberships.length
+    ? [...PRODUCT_TABS, MANAGE_TAB]
+    : PRODUCT_TABS;
   return (
     <header className="sticky top-0 z-40 border-b border-hairline bg-background">
       <div className="page">
@@ -171,7 +201,7 @@ export function SiteHeader({ search }: { search?: ReactNode }) {
             aria-label="Products"
             className="flex items-end justify-center gap-8 self-stretch pt-2"
           >
-            {PRODUCT_TABS.map((tab) => (
+            {tabs.map((tab) => (
               <ProductTab key={tab.to} tab={tab} />
             ))}
           </nav>

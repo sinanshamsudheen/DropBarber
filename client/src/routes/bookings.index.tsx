@@ -1,12 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CalendarPlus, Lock } from "lucide-react";
 import { AppointmentCard } from "@/components/cards/appointment-card";
-import { EmptyState, ErrorState, ListSkeleton } from "@/components/common/states";
+import {
+  EmptyState,
+  ErrorState,
+  ListSkeleton,
+} from "@/components/common/states";
 import { CustomerShell, PageHeader } from "@/components/layout/customer-shell";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { listCustomerAppointments } from "@/lib/api";
+import { useCustomerAppointments } from "@/hooks/use-customer-appointments";
+import { getErrorMessage } from "@/lib/api-client";
 import { useSession } from "@/lib/session";
 
 export const Route = createFileRoute("/bookings/")({
@@ -29,16 +33,15 @@ export const Route = createFileRoute("/bookings/")({
 
 function BookingsPage() {
   const { user, ready } = useSession();
-  const q = useQuery({
-    queryKey: ["customer-appointments"],
-    queryFn: () => listCustomerAppointments(),
-    enabled: !!user,
-  });
+  const q = useCustomerAppointments({ enabled: !!user });
 
   return (
     <CustomerShell>
       <div className="page pb-12 sm:pb-16">
-        <PageHeader title="Bookings" description="Your appointments across every shop you book." />
+        <PageHeader
+          title="Bookings"
+          description="Your appointments across every shop you book."
+        />
 
         {ready && !user && (
           <EmptyState
@@ -69,7 +72,7 @@ function BookingsPage() {
               {q.isError && (
                 <div className="sm:col-span-2">
                   <ErrorState
-                    message={(q.error as Error).message}
+                    message={getErrorMessage(q.error)}
                     onRetry={() => void q.refetch()}
                   />
                 </div>

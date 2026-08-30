@@ -1,33 +1,22 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import type { ReactNode } from "react";
-import type { SessionUser } from "./types";
-
-const STORAGE_KEY = "drop.session";
-
-/** Demo accounts — replaced by real auth (JWT/session) later. */
-export const DEMO_USERS: Record<string, SessionUser> = {
-  "john@example.com": {
-    id: "cus-you",
-    name: "John Fernandes",
-    email: "john@example.com",
-    memberships: [],
-  },
-  "owner@fadeandco.com": {
-    id: "usr-owner",
-    name: "Deepa Iyer",
-    email: "owner@fadeandco.com",
-    memberships: [
-      { shopId: "shop-fade", role: "owner" },
-      { shopId: "shop-neon", role: "manager" },
-    ],
-  },
-  "raj@fadeandco.com": {
-    id: "usr-raj",
-    name: "Raj Menon",
-    email: "raj@fadeandco.com",
-    memberships: [{ shopId: "shop-fade", role: "barber", barberId: "brb-raj" }],
-  },
-};
+import { getMeApiV1AuthMeGet } from "./api/generated/clients/getMeApiV1AuthMeGet";
+import { loginApiV1AuthLoginPost } from "./api/generated/clients/loginApiV1AuthLoginPost";
+import { logoutApiV1AuthLogoutPost } from "./api/generated/clients/logoutApiV1AuthLogoutPost";
+import { registerApiV1AuthRegisterPost } from "./api/generated/clients/registerApiV1AuthRegisterPost";
+import type { MeOut } from "./api/generated/types/MeOut";
+import type { MembershipOut } from "./api/generated/types/MembershipOut";
+import { meOutSchema } from "./api/generated/zod/meOutSchema";
+import { sessionOutSchema } from "./api/generated/zod/sessionOutSchema";
+import { clearTokens, loadTokens, storeTokens, validated } from "./api-client";
+import type { Membership, SessionUser } from "./types";
 
 export type Permission =
   | "appointments:view_all"
@@ -62,73 +51,144 @@ const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "reviews:view",
     "points:view_all",
   ],
-  barber: ["appointments:complete", "customers:view", "schedule:manage", "reviews:view"],
+  barber: [
+    "appointments:complete",
+    "customers:view",
+    "schedule:manage",
+    "reviews:view",
+  ],
 };
+
+const KNOWN_MEMBERSHIP_ROLES = new Set<Membership["role"]>([
+  "owner",
+  "manager",
+  "barber",
+]);
+
+function mapMembership(m: MembershipOut): Membership | null {
+  if (!KNOWN_MEMBERSHIP_ROLES.has(m.role as Membership["role"])) return null;
+  return {
+    shopId: m.shop_id,
+    role: m.role as Membership["role"],
+    ...(m.barber_id ? { barberId: m.barber_id } : {}),
+  };
+}
+
+function mapMeToSessionUser(me: MeOut): SessionUser {
+  return {
+    id: me.id,
+    name: me.display_name ?? "",
+    email: me.email ?? "",
+    ...(me.avatar_url ? { photo: me.avatar_url } : {}),
+    memberships: me.memberships
+      .map(mapMembership)
+      .filter((m): m is Membership => m !== null),
+  };
+}
 
 interface SessionContextValue {
   user: SessionUser | null;
   ready: boolean;
-  login: (email: string) => SessionUser | null;
-  signup: (name: string, email: string) => SessionUser;
+  login: (email: string, password: string) => Promise<SessionUser>;
+  signup: (
+    name: string,
+    email: string,
+    password: string,
+  ) => Promise<SessionUser>;
   logout: () => void;
-  membershipFor: (shopId: string) => SessionUser["memberships"][number] | undefined;
+  refreshUser: () => Promise<SessionUser>;
+  membershipFor: (shopId: string) => Membership | undefined;
   can: (shopId: string, permission: Permission) => boolean;
 }
 
 const SessionContext = createContext<SessionContextValue | null>(null);
+
+async function fetchSessionUser(): Promise<SessionUser> {
+  const { data } = await getMeApiV1AuthMeGet();
+  return mapMeToSessionUser(validated(meOutSchema, data.data));
+}
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setUser(JSON.parse(raw) as SessionUser);
-    } catch {
-      /* ignore corrupt session */
+    let cancelled = false;
+    async function restore() {
+      if (!loadTokens()) {
+        setReady(true);
+        return;
+      }
+      try {
+        const restored = await fetchSessionUser();
+        if (!cancelled) setUser(restored);
+      } catch {
+        // Token invalid/expired even after getValidAccessToken's own
+        // refresh attempt — there's no session to restore.
+        clearTokens();
+      } finally {
+        if (!cancelled) setReady(true);
+      }
     }
-    setReady(true);
+    void restore();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const persist = useCallback((next: SessionUser | null) => {
-    setUser(next);
-    if (next) localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    else localStorage.removeItem(STORAGE_KEY);
+  const logout = useCallback(() => {
+    // Clears local state immediately regardless of whether the network
+    // call succeeds — matching the backend's own idempotent-either-way
+    // logout semantics — so no caller needs to await this.
+    setUser(null);
+    clearTokens();
+    void logoutApiV1AuthLogoutPost().catch(() => {
+      // Best-effort: the caller's intent (be logged out) is already satisfied locally.
+    });
   }, []);
 
   const value = useMemo<SessionContextValue>(
     () => ({
       user,
       ready,
-      login: (email) => {
-        const found = DEMO_USERS[email.trim().toLowerCase()];
-        if (!found) return null;
-        persist(found);
-        return found;
+      login: async (email, password) => {
+        const { data } = await loginApiV1AuthLoginPost({
+          body: { email, password },
+        });
+        storeTokens(validated(sessionOutSchema, data.data));
+        const restored = await fetchSessionUser();
+        setUser(restored);
+        return restored;
       },
-      signup: (name, email) => {
-        const created: SessionUser = {
-          id: "cus-you",
-          name,
-          email: email.trim().toLowerCase(),
-          memberships: [],
-        };
-        persist(created);
-        return created;
+      signup: async (name, email, password) => {
+        const { data } = await registerApiV1AuthRegisterPost({
+          body: { email, password, display_name: name || null },
+        });
+        storeTokens(validated(sessionOutSchema, data.data));
+        const restored = await fetchSessionUser();
+        setUser(restored);
+        return restored;
       },
-      logout: () => persist(null),
-      membershipFor: (shopId) => user?.memberships.find((m) => m.shopId === shopId),
+      logout,
+      refreshUser: async () => {
+        const restored = await fetchSessionUser();
+        setUser(restored);
+        return restored;
+      },
+      membershipFor: (shopId) =>
+        user?.memberships.find((m) => m.shopId === shopId),
       can: (shopId, permission) => {
         const m = user?.memberships.find((x) => x.shopId === shopId);
         if (!m) return false;
         return (ROLE_PERMISSIONS[m.role] ?? []).includes(permission);
       },
     }),
-    [user, ready, persist],
+    [user, ready, logout],
   );
 
-  return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
+  return (
+    <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
+  );
 }
 
 export function useSession() {

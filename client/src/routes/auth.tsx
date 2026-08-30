@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DEMO_USERS, useSession } from "@/lib/session";
+import { getErrorMessage } from "@/lib/api-client";
+import { useSession } from "@/lib/session";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (search: Record<string, unknown>): { redirect?: string } =>
@@ -34,6 +35,8 @@ function AuthPage() {
   const navigate = useNavigate();
   const { redirect } = useSearch({ from: "/auth" });
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -44,35 +47,38 @@ function AuthPage() {
     else void navigate({ to: "/" });
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setPending(true);
-    setTimeout(() => {
-      const user = login(email);
-      setPending(false);
-      if (!user) {
-        setError("We don't recognise that email. Try one of the demo accounts below.");
-        return;
-      }
-      toast.success(`Welcome back, ${user.name.split(" ")[0]}`);
+    try {
+      const user = await login(email, password);
+      toast.success(`Welcome back, ${user.name.split(" ")[0] || user.email}`);
       finish();
-    }, 500);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setPending(false);
+    }
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim()) {
-      setError("Please add your name and email.");
+    if (!name.trim() || !email.trim() || !signupPassword) {
+      setError("Please add your name, email and password.");
       return;
     }
+    setError(null);
     setPending(true);
-    setTimeout(() => {
-      signup(name, email);
-      setPending(false);
+    try {
+      await signup(name, email, signupPassword);
       toast.success("Account created");
       finish();
-    }, 600);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setPending(false);
+    }
   };
 
   return (
@@ -103,7 +109,7 @@ function AuthPage() {
               className="space-y-5"
               onSubmit={(e) => {
                 e.preventDefault();
-                toast.success("If that email exists, a reset link is on its way.");
+                toast.info("Password reset isn't available yet.");
                 setReset(false);
               }}
             >
@@ -157,8 +163,10 @@ function AuthPage() {
                     <Input
                       id="password"
                       type="password"
+                      required
                       className="mt-2"
-                      placeholder="Any value in demo"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
                   {error && (
@@ -203,6 +211,17 @@ function AuthPage() {
                       required
                     />
                   </div>
+                  <div>
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      required
+                      className="mt-2"
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
+                    />
+                  </div>
                   {error && (
                     <p role="alert" className="text-sm text-destructive">
                       {error}
@@ -215,26 +234,6 @@ function AuthPage() {
               </TabsContent>
             </Tabs>
           )}
-        </div>
-
-        <div className="mt-8 rounded-md border border-dashed border-hairline p-5">
-          <p className="text-sm font-medium text-ink">Demo accounts</p>
-          <ul className="mt-3 space-y-2">
-            {Object.entries(DEMO_USERS).map(([mail, u]) => (
-              <li key={mail}>
-                <button
-                  type="button"
-                  onClick={() => setEmail(mail)}
-                  className="w-full rounded-sm px-3 py-3 text-left text-sm transition-colors hover:bg-surface-soft"
-                >
-                  <span className="font-medium text-ink">{u.name}</span>{" "}
-                  <span className="text-muted-foreground">
-                    · {u.memberships.length ? u.memberships[0]?.role : "customer"} · {mail}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
         </div>
 
         <p className="mt-8 text-[13px] text-muted-foreground">

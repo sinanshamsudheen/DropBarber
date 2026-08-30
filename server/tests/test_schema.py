@@ -193,7 +193,14 @@ async def test_public_cannot_read_private_crm_notes(db_conn):
 
 
 async def test_public_can_read_active_shops(db_conn):
-    count = await _count_as(db_conn, None, "SELECT count(*) FROM shops WHERE status = 'active'")
+    # >= 2, not ==: the shared local dev DB may carry other active shops
+    # from other tests/manual use; what matters is that both of this test's
+    # own seeded shops are among the publicly visible ones.
+    count = await _count_as(
+        db_conn,
+        None,
+        f"SELECT count(*) FROM shops WHERE status = 'active' AND id IN ('{SHOP_A}', '{SHOP_B}')",
+    )
     assert count == 2
 
 

@@ -1,12 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { History, Lock, ShieldCheck } from "lucide-react";
 import { ReviewDialog } from "@/components/booking/review-dialog";
 import { StatusBadge } from "@/components/common/status-badge";
-import { EmptyState, ErrorState, ListSkeleton } from "@/components/common/states";
+import {
+  EmptyState,
+  ErrorState,
+  ListSkeleton,
+} from "@/components/common/states";
 import { CustomerShell, PageHeader } from "@/components/layout/customer-shell";
 import { Button } from "@/components/ui/button";
-import { getCustomerHistory } from "@/lib/api";
+import { useCustomerHistory } from "@/hooks/use-customer-history";
+import { getErrorMessage } from "@/lib/api-client";
 import { dayLabel, money, timeLabel } from "@/lib/format";
 import { useSession } from "@/lib/session";
 
@@ -31,11 +35,7 @@ export const Route = createFileRoute("/history")({
 
 function HistoryPage() {
   const { user, ready } = useSession();
-  const q = useQuery({
-    queryKey: ["history"],
-    queryFn: () => getCustomerHistory(),
-    enabled: !!user,
-  });
+  const q = useCustomerHistory({ enabled: !!user });
 
   return (
     <CustomerShell>
@@ -46,8 +46,12 @@ function HistoryPage() {
         />
 
         <p className="mb-8 flex items-start gap-3 rounded-md border border-hairline bg-surface-soft px-5 py-4 text-sm text-body">
-          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-ink" aria-hidden />
-          Only you can see this cross-shop view. Each shop only ever sees its own history with you.
+          <ShieldCheck
+            className="mt-0.5 size-4 shrink-0 text-ink"
+            aria-hidden
+          />
+          Only you can see this cross-shop view. Each shop only ever sees its
+          own history with you.
         </p>
 
         {ready && !user && (
@@ -67,7 +71,10 @@ function HistoryPage() {
           <>
             {q.isPending && <ListSkeleton rows={3} />}
             {q.isError && (
-              <ErrorState message={(q.error as Error).message} onRetry={() => void q.refetch()} />
+              <ErrorState
+                message={getErrorMessage(q.error)}
+                onRetry={() => void q.refetch()}
+              />
             )}
             {q.data?.length === 0 && (
               <EmptyState
@@ -89,22 +96,30 @@ function HistoryPage() {
                 >
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
                     <div className="min-w-0">
-                      <p className="type-title-md truncate text-ink">{a.shop.name}</p>
+                      <p className="type-title-md truncate text-ink">
+                        {a.shop.name}
+                      </p>
                       <p className="truncate text-sm text-muted-foreground">
-                        {dayLabel(a.date)} · {timeLabel(a.time)} · {a.barber.name}
+                        {dayLabel(a.date)} · {timeLabel(a.time)} ·{" "}
+                        {a.barber.name}
                       </p>
                     </div>
                     <StatusBadge status={a.status} />
                   </div>
                   <p className="mt-3 text-base text-body">
-                    {a.completion?.actualService ?? a.service.name}
+                    {a.completion?.actualService ??
+                      a.service?.name ??
+                      "Service"}
                     <span className="ms-2 font-semibold text-ink">
                       {money(a.completion?.finalPrice ?? a.price)}
                     </span>
                   </p>
                   <div className="mt-5 flex flex-wrap gap-2">
                     <Button asChild size="sm" variant="secondary">
-                      <Link to="/bookings/$appointmentId" params={{ appointmentId: a.id }}>
+                      <Link
+                        to="/bookings/$appointmentId"
+                        params={{ appointmentId: a.id }}
+                      >
                         Details
                       </Link>
                     </Button>

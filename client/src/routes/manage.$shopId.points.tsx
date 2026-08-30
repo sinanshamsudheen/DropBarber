@@ -1,10 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Trophy } from "lucide-react";
 import { BarberAvatar } from "@/components/cards/barber-card";
-import { EmptyState, ErrorState, ListSkeleton } from "@/components/common/states";
+import {
+  EmptyState,
+  ErrorState,
+  ListSkeleton,
+} from "@/components/common/states";
 import { ManageHeader } from "@/components/layout/manage-shell";
-import { getBarberPoints } from "@/lib/api";
+import { useBarberPoints } from "@/hooks/use-barber-points";
+import { getErrorMessage } from "@/lib/api-client";
 import { dayLabel } from "@/lib/format";
 import { useSession } from "@/lib/session";
 
@@ -18,12 +22,11 @@ function PointsPage() {
   const ownBarberId = membershipFor(shopId)?.barberId;
   const seesEveryone = can(shopId, "points:view_all");
 
-  const q = useQuery({
-    queryKey: ["barber-points", shopId],
-    queryFn: () => getBarberPoints(shopId),
-  });
+  const q = useBarberPoints(shopId);
 
-  const rows = (q.data ?? []).filter((r) => seesEveryone || r.barber.id === ownBarberId);
+  const rows = (q.data ?? []).filter(
+    (r) => seesEveryone || r.barber.id === ownBarberId,
+  );
 
   return (
     <div>
@@ -37,13 +40,17 @@ function PointsPage() {
       />
 
       <p className="mb-4 rounded-md border border-hairline bg-card px-4 py-3 text-sm text-muted-foreground">
-        Completing the detailed record earns 10 points. Skipping it is always fine — the record is
-        worth more to the shop than the points are to anyone.
+        Completing the detailed record earns 10 points. Skipping it is always
+        fine — the record is worth more to the shop than the points are to
+        anyone.
       </p>
 
       {q.isPending && <ListSkeleton rows={3} />}
       {q.isError && (
-        <ErrorState message={(q.error as Error).message} onRetry={() => void q.refetch()} />
+        <ErrorState
+          message={getErrorMessage(q.error)}
+          onRetry={() => void q.refetch()}
+        />
       )}
       {q.isSuccess && rows.length === 0 && (
         <EmptyState
@@ -55,11 +62,18 @@ function PointsPage() {
 
       <ul className="space-y-3">
         {rows.map(({ barber, history }) => (
-          <li key={barber.id} className="rounded-md border border-hairline bg-card p-4">
+          <li
+            key={barber.id}
+            className="rounded-md border border-hairline bg-card p-4"
+          >
             <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
               <BarberAvatar barber={barber} className="size-11" />
-              <p className="min-w-0 truncate text-sm font-semibold">{barber.name}</p>
-              <span className="shrink-0 text-sm font-semibold text-ink">{barber.points} pts</span>
+              <p className="min-w-0 truncate text-sm font-semibold">
+                {barber.name}
+              </p>
+              <span className="shrink-0 text-sm font-semibold text-ink">
+                {barber.points} pts
+              </span>
             </div>
 
             {history.length === 0 ? (
@@ -69,11 +83,16 @@ function PointsPage() {
             ) : (
               <ul className="mt-3 space-y-1.5 border-t border-hairline pt-3">
                 {history.slice(0, 5).map((entry) => (
-                  <li key={entry.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 text-sm">
+                  <li
+                    key={entry.id}
+                    className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 text-sm"
+                  >
                     <span className="min-w-0 truncate text-muted-foreground">
                       {entry.reason} · {dayLabel(entry.date)}
                     </span>
-                    <span className="shrink-0 font-medium">+{entry.points}</span>
+                    <span className="shrink-0 font-medium">
+                      +{entry.points}
+                    </span>
                   </li>
                 ))}
               </ul>

@@ -1,0 +1,49 @@
+# Local stack — never points at the production Supabase project.
+#
+# App data, Auth, and Storage all live in ONE Postgres: this repo's own local
+# Supabase CLI stack (`npx supabase start`, already configured in
+# server/.env.example), reached from inside the container via
+# `host.docker.internal`. There is deliberately no separate app-data Postgres
+# here anymore — an earlier iteration ran one, but Storage's RLS policies
+# (and anything else that joins across `shops`/`shop_members`/`auth.users`)
+# need that data in the SAME Postgres GoTrue/Storage read from, so a second,
+# disposable Postgres just recreates the split it was meant to avoid. Reset
+# for a clean slate via the Supabase CLI itself (`npx supabase db reset`),
+# not `docker compose down -v`.
+#
+# `docker compose up frontend backend -d` starts both named services; the
+# Supabase CLI stack must already be running separately.
+
+services:
+  backend:
+    build:
+      context: ./server
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://postgres:postgres@host.docker.internal:54322/postgres}
+      SUPABASE_URL: ${SUPABASE_URL:-http://host.docker.internal:54321}
+      # `host.docker.internal` only resolves inside containers — any URL
+      # this backend hands back to the browser (a signed upload URL, a
+      # public Storage object URL) needs a hostname the browser can
+      # actually reach instead.
+      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-http://localhost:54321}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:?Set SUPABASE_ANON_KEY in .env — see `npx supabase status` for your local stack's anon key}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-authenticated}
+      JWT_ISSUER: ${JWT_ISSUER:-}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:8080}
+    extra_hosts:
+      # Lets the container reach the host machine's own local Supabase CLI
+      # stack — resolves on Linux too (Docker Desktop already provides it
+      # on macOS/Windows without this entry, but it's harmless there).
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./client
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+    depends_on:
+      - backend
+    ports:
+      - "8080:3000"

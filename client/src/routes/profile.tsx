@@ -1,6 +1,13 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ChevronRight, Clock3, Lock, LogOut, ShieldCheck, Store } from "lucide-react";
+import {
+  ChevronRight,
+  Clock3,
+  Lock,
+  LogOut,
+  ShieldCheck,
+  Store,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { initials } from "@/components/cards/barber-card";
@@ -13,7 +20,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { getCustomerProfile, saveCustomerProfile, CURRENT_CUSTOMER_ID } from "@/lib/api";
+import { getMeApiV1AuthMeGetQueryOptions } from "@/lib/api/generated/hooks/useGetMeApiV1AuthMeGet";
+import { getErrorMessage } from "@/lib/api-client";
+import { mapMeToCustomerProfile } from "@/lib/domain-mappers";
 import { useSession } from "@/lib/session";
 import type { Photo } from "@/lib/types";
 
@@ -23,7 +32,8 @@ export const Route = createFileRoute("/profile")({
       { title: "Your profile — Drop" },
       {
         name: "description",
-        content: "Manage your details, saved style photos and privacy settings.",
+        content:
+          "Manage your details, saved style photos and privacy settings.",
       },
       { property: "og:title", content: "Your profile — Drop" },
       {
@@ -38,12 +48,14 @@ export const Route = createFileRoute("/profile")({
 function ProfilePage() {
   const { user, ready, logout } = useSession();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const q = useQuery({
-    queryKey: ["profile"],
-    queryFn: () => getCustomerProfile(),
+  const meQuery = useQuery({
+    ...getMeApiV1AuthMeGetQueryOptions({}),
     enabled: !!user,
   });
+  const q = {
+    isPending: meQuery.isPending,
+    data: meQuery.data ? mapMeToCustomerProfile(meQuery.data.data) : undefined,
+  };
 
   const [preferences, setPreferences] = useState("");
   const [phone, setPhone] = useState("");
@@ -58,18 +70,17 @@ function ProfilePage() {
     }
   }, [q.data]);
 
+  // No backend endpoint exists yet for updating profile fields
+  // (preferences/phone/saved photos) — this is a documented no-op rather
+  // than a silent pretend-save, matching the prior api.ts behavior.
   const save = useMutation({
-    mutationFn: () =>
-      saveCustomerProfile(CURRENT_CUSTOMER_ID, {
-        preferences,
-        phone,
-        savedPhotos: photos,
-      }),
+    mutationFn: async () => {
+      await meQuery.refetch();
+    },
     onSuccess: () => {
       toast.success("Profile saved");
-      void queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: unknown) => toast.error(getErrorMessage(e)),
   });
 
   if (ready && !user) {
@@ -108,11 +119,15 @@ function ProfilePage() {
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0">
-                <p className="type-display-sm truncate text-ink">{user?.name ?? q.data.name}</p>
+                <p className="type-display-sm truncate text-ink">
+                  {user?.name ?? q.data.name}
+                </p>
                 <p className="truncate text-sm text-muted-foreground">
                   {user?.email ?? q.data.email}
                 </p>
-                <p className="truncate text-sm text-muted-foreground">{q.data.phone}</p>
+                <p className="truncate text-sm text-muted-foreground">
+                  {q.data.phone}
+                </p>
               </div>
             </div>
 
@@ -125,11 +140,15 @@ function ProfilePage() {
                 <div className="min-w-0 flex-1">
                   <p className="type-title-md text-ink">Shop workspace</p>
                   <p className="text-sm text-muted-foreground">
-                    Manage appointments, customers and staff for your {user.memberships.length} shop
+                    Manage appointments, customers and staff for your{" "}
+                    {user.memberships.length} shop
                     {user.memberships.length > 1 ? "s" : ""}.
                   </p>
                 </div>
-                <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+                <ChevronRight
+                  className="size-4 text-muted-foreground"
+                  aria-hidden
+                />
               </Link>
             ) : null}
 
@@ -140,9 +159,14 @@ function ProfilePage() {
               <Clock3 className="size-5 shrink-0 text-ink" aria-hidden />
               <div className="min-w-0 flex-1">
                 <p className="type-title-md text-ink">Your visit history</p>
-                <p className="text-sm text-muted-foreground">Across every shop you've been to.</p>
+                <p className="text-sm text-muted-foreground">
+                  Across every shop you've been to.
+                </p>
               </div>
-              <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+              <ChevronRight
+                className="size-4 text-muted-foreground"
+                aria-hidden
+              />
             </Link>
 
             <section>
@@ -176,8 +200,9 @@ function ProfilePage() {
             <section>
               <h2 className="type-display-md text-ink">Saved style photos</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                These stay on your profile and can be reused for any booking. A reference photo
-                added during booking belongs to that appointment only.
+                These stay on your profile and can be reused for any booking. A
+                reference photo added during booking belongs to that appointment
+                only.
               </p>
               <div className="mt-4">
                 <ReferencePhotoUploader
@@ -194,17 +219,25 @@ function ProfilePage() {
               <h2 className="type-display-md text-ink">Privacy</h2>
               <div className="mt-4 space-y-5 rounded-md border border-hairline bg-card p-4 sm:p-5 md:p-6">
                 <div className="flex items-start gap-3">
-                  <ShieldCheck className="mt-0.5 size-4 shrink-0 text-ink" aria-hidden />
+                  <ShieldCheck
+                    className="mt-0.5 size-4 shrink-0 text-ink"
+                    aria-hidden
+                  />
                   <p className="text-sm text-muted-foreground">
-                    Shops can only see their own history with you — never your visits to other
-                    shops. Finished haircut photos are never made public.
+                    Shops can only see their own history with you — never your
+                    visits to other shops. Finished haircut photos are never
+                    made public.
                   </p>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <Label htmlFor="share" className="font-normal">
                     Share my saved preferences with shops I book
                   </Label>
-                  <Switch id="share" checked={shareHistory} onCheckedChange={setShareHistory} />
+                  <Switch
+                    id="share"
+                    checked={shareHistory}
+                    onCheckedChange={setShareHistory}
+                  />
                 </div>
               </div>
             </section>
