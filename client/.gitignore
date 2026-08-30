@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.output/
+.tanstack/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Tool caches
+.eslintcache
+.vite/
+
+# OS and editor files
+.DS_Store
+.idea/
+.vscode/
