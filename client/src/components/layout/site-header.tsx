@@ -49,7 +49,7 @@ export const PRODUCT_TABS = [
 export function Wordmark({ className }: { className?: string }) {
   return (
     <Link to="/" aria-label="Drop — home" className={cn("inline-flex items-center", className)}>
-      <img src="/brand/drop-full-barber-two-tone.svg" alt="Drop Barber" className="h-7 w-auto" />
+      <img src="/brand/drop-full-barber-two-tone.svg" alt="Drop Barber" className="h-9 w-auto" />
     </Link>
   );
 }
@@ -181,10 +181,16 @@ export function SiteHeader({ search }: { search?: ReactNode }) {
         </div>
 
         {/* Mobile: hamburger sheet + wordmark + account. */}
-        <div className="flex h-16 items-center justify-between gap-3 md:hidden">
-          <MobileMenu />
-          <Wordmark />
-          <AccountCluster />
+        <div className="grid h-16 grid-cols-3 items-center gap-3 md:hidden">
+          <div className="flex justify-start">
+            <MobileMenu />
+          </div>
+          <div className="flex justify-center">
+            <Wordmark />
+          </div>
+          <div className="flex justify-end">
+            <AccountCluster />
+          </div>
         </div>
       </div>
 
