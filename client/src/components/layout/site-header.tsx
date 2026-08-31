@@ -49,7 +49,7 @@ export const PRODUCT_TABS = [
 export function Wordmark({ className }: { className?: string }) {
   return (
     <Link to="/" aria-label="Drop — home" className={cn("inline-flex items-center", className)}>
-      <img src="/brand/drop-full-teal.svg" alt="Drop" className="h-7 w-auto" />
+      <img src="/brand/drop-full-barber-two-tone.svg" alt="Drop Barber" className="h-7 w-auto" />
     </Link>
   );
 }
