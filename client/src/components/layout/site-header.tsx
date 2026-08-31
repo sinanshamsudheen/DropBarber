@@ -49,7 +49,7 @@ export const PRODUCT_TABS = [
 export function Wordmark({ className }: { className?: string }) {
   return (
     <Link to="/" aria-label="Drop — home" className={cn("inline-flex items-center", className)}>
-      <img src="/brand/drop-full-barber-two-tone.svg" alt="Drop Barber" className="h-9 w-auto" />
+      <img src="/brand/drop-full-barber-two-tone.svg" alt="Drop Barber" className="h-11 w-auto" />
     </Link>
   );
 }
@@ -91,7 +91,12 @@ function AccountCluster() {
   if (!user) {
     return (
       <div className="flex items-center gap-1">
-        <Button asChild variant="ghost" size="sm" className="rounded-full">
+        <Button
+          asChild
+          variant="secondary"
+          size="pill"
+          className="rounded-full transition-shadow hover:shadow-float"
+        >
           <Link to="/auth">Log in</Link>
         </Button>
         <Button asChild variant="pill" size="pill" className="hidden sm:inline-flex">
